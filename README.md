@@ -51,7 +51,9 @@ For auto-restart while developing: `npm run dev`
 |---|---|
 | `PORT` | Server port (default 3000) |
 | `ADMIN_USER` / `ADMIN_PASSWORD` | Login for `/admin`. The dashboard stays disabled until a password is set. |
-| `ANTHROPIC_API_KEY` | Enables the AI team (get one at platform.claude.com). |
+| `ANTHROPIC_API_KEY` | Runs the AI team on Claude — best quality (platform.claude.com). |
+| `GROQ_API_KEY` | Runs the AI team on Groq's free tier — fast, open models (console.groq.com). Set either key or both. |
+| `AI_PROVIDER` | Optional: force `claude` or `groq` when both keys are set (default: Claude). |
 | `HIGGSFIELD_API_KEY` / `HIGGSFIELD_API_SECRET` | Lets Valen generate real ad images (get keys at cloud.higgsfield.ai). Optional. |
 | `AUTO_CAMPAIGNS` | `true` = every active client gets a monthly campaign generated automatically. |
 | `SMTP_*` + `NOTIFY_EMAIL` | Email you every new lead. Works with Gmail App Passwords or any SMTP provider. |

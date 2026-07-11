@@ -141,7 +141,7 @@ async function renderDashboard() {
 
   main.innerHTML = `
     <h2>Dashboard</h2>
-    ${o.aiEnabled ? '' : `<div class="notice warn">The AI team is off — add <strong>ANTHROPIC_API_KEY</strong> to your .env to turn on Sofía, Marco, Lucía and Valen.</div>`}
+    ${o.aiEnabled ? `<div class="notice ok">AI team is on — running on <strong>${esc(o.aiProvider)}</strong>.</div>` : `<div class="notice warn">The AI team is off — add <strong>ANTHROPIC_API_KEY</strong> (Claude, best quality) or <strong>GROQ_API_KEY</strong> (Groq, free tier) to your .env to turn on Sofía, Marco, Lucía and Valen.</div>`}
     ${o.aiEnabled && !o.imagesEnabled ? `<div class="notice warn">Ad images are off — add <strong>HIGGSFIELD_API_KEY</strong> + <strong>HIGGSFIELD_API_SECRET</strong> to let Valen generate real ad visuals.</div>` : ''}
     ${o.autoCampaigns ? `<div class="notice ok">Auto-campaigns are ON — every active client gets a fresh monthly campaign automatically.</div>` : ''}
     <div class="tiles">

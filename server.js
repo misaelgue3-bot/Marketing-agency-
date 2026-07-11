@@ -202,6 +202,7 @@ admin.get('/overview', (req, res) => {
     draftCampaigns: campaigns.filter((c) => c.status === 'draft').length,
     revenueByMonth: months,
     aiEnabled: agents.available(),
+    aiProvider: agents.providerLabel(),
     imagesEnabled: agents.imagesAvailable(),
     autoCampaigns: process.env.AUTO_CAMPAIGNS === 'true',
   });
@@ -395,6 +396,7 @@ setTimeout(autoCampaignSweep, 15 * 1000); // and shortly after boot
 app.listen(PORT, () => {
   console.log(`LocalLift running at http://localhost:${PORT}`);
   if (!process.env.ADMIN_PASSWORD) console.log('Tip: set ADMIN_PASSWORD in .env to enable the /admin dashboard.');
-  if (!agents.available()) console.log('Tip: set ANTHROPIC_API_KEY in .env to enable AI campaign generation.');
+  if (!agents.available()) console.log('Tip: set ANTHROPIC_API_KEY (Claude) or GROQ_API_KEY (Groq) in .env to enable the AI team.');
+  else console.log(`AI team provider: ${agents.providerLabel()}`);
   if (process.env.AUTO_CAMPAIGNS === 'true') console.log('Auto-campaigns: ON — monthly campaigns generate themselves.');
 });

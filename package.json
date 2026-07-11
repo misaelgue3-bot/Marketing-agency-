@@ -11,7 +11,8 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.30.0",
+    "@anthropic-ai/sdk": "^0.111.0",
+    "@higgsfield/client": "^0.2.1",
     "express": "^4.19.2",
     "nodemailer": "^6.9.14"
   },

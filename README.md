@@ -15,12 +15,23 @@ small businesses:
   - manage **clients**: plan, monthly fee, status, goals
   - record **payments** per client
   - review **AI-generated campaigns**
-- **AI campaign agents** (`lib/agents.js`) — two Claude agents (a strategist
-  that brainstorms and a media planner that builds the plan) generate a
-  complete monthly campaign per client: strategy, target audience, budget
-  split, bilingual ad copy, a 4-week calendar, and KPIs. With
-  `AUTO_CAMPAIGNS=true`, every active client gets a fresh campaign each
-  month automatically — no input from you.
+- **AI agent team** (`lib/agents.js`) — four Claude agents with distinct
+  roles, coordinated by an orchestrator:
+  - **Sofía — Client Relations**: drafts bilingual client messages (welcome,
+    monthly check-ins, payment reminders, replies) from the 💬 button on
+    each client.
+  - **Marco — Strategist**: brainstorms campaign angles, hooks, and cultural
+    moments for the client's specific business.
+  - **Lucía — Creative Director**: reviews Marco's brainstorm, kills weak
+    ideas, improves the strongest one, and writes the creative brief.
+  - **Valen — Creative Producer**: turns the brief into finished bilingual
+    ads and a 4-week plan — and generates **real ad images with Higgsfield**
+    (Soul model) when `HIGGSFIELD_API_KEY`/`HIGGSFIELD_API_SECRET` are set.
+
+  The campaign pipeline is Marco → Lucía → Valen (+ Higgsfield) → a
+  structured plan (strategy, audience, budget split, ES/EN ad copy with
+  images, calendar, KPIs). With `AUTO_CAMPAIGNS=true`, every active client
+  gets a fresh campaign each month automatically — no input from you.
 
 ## Run it locally
 
@@ -40,7 +51,8 @@ For auto-restart while developing: `npm run dev`
 |---|---|
 | `PORT` | Server port (default 3000) |
 | `ADMIN_USER` / `ADMIN_PASSWORD` | Login for `/admin`. The dashboard stays disabled until a password is set. |
-| `ANTHROPIC_API_KEY` | Enables the AI campaign agents (get one at platform.claude.com). |
+| `ANTHROPIC_API_KEY` | Enables the AI team (get one at platform.claude.com). |
+| `HIGGSFIELD_API_KEY` / `HIGGSFIELD_API_SECRET` | Lets Valen generate real ad images (get keys at cloud.higgsfield.ai). Optional. |
 | `AUTO_CAMPAIGNS` | `true` = every active client gets a monthly campaign generated automatically. |
 | `SMTP_*` + `NOTIFY_EMAIL` | Email you every new lead. Works with Gmail App Passwords or any SMTP provider. |
 
@@ -53,12 +65,14 @@ tiers), enable a persistent volume so data survives restarts.
 1. A business owner submits the website form (or messages you on WhatsApp).
 2. The lead appears in **Admin → Leads** (and in your email inbox if SMTP
    is configured). You call them, then hit **→ Client** to convert.
-3. On the client, hit **✨ New campaign** — the AI agents brainstorm and
-   deliver a full monthly plan in about a minute. Review it under
-   **AI Campaigns**, tweak, and mark it approved/live.
-4. Record payments as they come in; the **Dashboard** tracks your MRR and
+3. Hit **💬 Message** and Sofía drafts the welcome message in Spanish and
+   English — copy it into WhatsApp or email.
+4. Hit **✨ Campaign** — Marco brainstorms, Lucía reviews and improves,
+   Valen produces the ads (with Higgsfield images if configured). Review
+   the draft under **AI Campaigns** and mark it approved/live.
+5. Record payments as they come in; the **Dashboard** tracks your MRR and
    revenue month over month.
-5. Turn on `AUTO_CAMPAIGNS=true` and step 3 happens by itself every month.
+6. Turn on `AUTO_CAMPAIGNS=true` and step 4 happens by itself every month.
 
 ## Deploying
 

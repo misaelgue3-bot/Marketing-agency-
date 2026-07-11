@@ -202,6 +202,7 @@ admin.get('/overview', (req, res) => {
     draftCampaigns: campaigns.filter((c) => c.status === 'draft').length,
     revenueByMonth: months,
     aiEnabled: agents.available(),
+    imagesEnabled: agents.imagesAvailable(),
     autoCampaigns: process.env.AUTO_CAMPAIGNS === 'true',
   });
 });
@@ -307,11 +308,30 @@ admin.post('/clients/:id/campaigns', async (req, res) => {
   const client = store.db.clients.find((c) => c.id === req.params.id);
   if (!client) return res.status(404).json({ error: 'Client not found' });
   try {
-    const campaign = await agents.generateCampaign(client, { month: req.body?.month });
+    const campaign = await agents.generateCampaign(client, {
+      month: req.body?.month,
+      log: (msg) => console.log(`[campaign:${client.business || client.name}] ${msg}`),
+    });
     store.addCampaign(campaign);
     res.json(campaign);
   } catch (err) {
     console.error('Campaign generation failed:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Sofía (client relations) drafts a bilingual message for a client
+admin.post('/clients/:id/message', async (req, res) => {
+  const client = store.db.clients.find((c) => c.id === req.params.id);
+  if (!client) return res.status(404).json({ error: 'Client not found' });
+  try {
+    const draft = await agents.draftClientMessage(client, {
+      purpose: req.body?.purpose,
+      context: req.body?.context,
+    });
+    res.json(draft);
+  } catch (err) {
+    console.error('Message drafting failed:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -352,7 +372,10 @@ async function autoCampaignSweep() {
       if (has) continue;
       try {
         console.log(`[auto-campaigns] Generating ${month} campaign for ${client.business || client.name}...`);
-        const campaign = await agents.generateCampaign(client, { month });
+        const campaign = await agents.generateCampaign(client, {
+          month,
+          log: (msg) => console.log(`[auto-campaigns:${client.business || client.name}] ${msg}`),
+        });
         store.addCampaign(campaign);
         console.log(`[auto-campaigns] Done: "${campaign.plan.name}"`);
       } catch (err) {

@@ -64,9 +64,11 @@ if ('IntersectionObserver' in window) {
   revealEls.forEach((el) => el.classList.add('in'));
 }
 
-// Pricing buttons pre-fill the contact message
+// Pricing buttons pre-select the plan in the contact form
 document.querySelectorAll('[data-plan]').forEach((btn) => {
   btn.addEventListener('click', () => {
+    const planSelect = document.getElementById('plan-select');
+    if (planSelect) planSelect.value = btn.dataset.plan;
     const message = document.querySelector('#contact-form [name="message"]');
     if (message && !message.value.trim()) {
       message.value = t.planPrefill(btn.dataset.plan);

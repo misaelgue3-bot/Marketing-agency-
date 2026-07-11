@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LocalLift Admin</title>
+<style>
+  :root {
+    --ink: #16343c; --ink-soft: #5b6d72; --ink-muted: #8a9a9e;
+    --brand: #e8542f; --teal: #12766b; --teal-soft: #4aa79b;
+    --bg: #f7f5f1; --surface: #ffffff; --line: #e6e0d6;
+    --good: #148a4e; --warn: #b97a00; --bad: #c23a3a;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Inter", system-ui, sans-serif; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.55; }
+  button { font: inherit; cursor: pointer; }
+  input, select, textarea { font: inherit; padding: 0.5rem 0.7rem; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); width: 100%; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--teal); outline-offset: 1px; border-color: var(--teal); }
+
+  header { background: var(--ink); color: #fff; padding: 0.9rem 1.5rem; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; }
+  header .logo { font-weight: 800; font-size: 1.15rem; }
+  header .logo span { color: #ffb525; }
+  nav { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  nav button { background: none; border: 0; color: #b9cfcb; padding: 0.45rem 0.9rem; border-radius: 8px; font-weight: 600; }
+  nav button:hover { color: #fff; }
+  nav button.on { background: rgba(255,255,255,0.14); color: #fff; }
+
+  main { max-width: 1100px; margin: 1.5rem auto 4rem; padding: 0 1.2rem; }
+  h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+  h3 { font-size: 1rem; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.9rem; margin-bottom: 1.5rem; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.1rem; }
+  .tile .label { font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; }
+  .tile .value { font-size: 1.7rem; font-weight: 800; margin-top: 0.15rem; }
+  .tile .sub { font-size: 0.8rem; color: var(--ink-muted); }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.2rem 1.3rem; margin-bottom: 1.3rem; }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); }
+  tr:hover td { background: #fbf9f6; }
+  td .small { font-size: 0.8rem; color: var(--ink-muted); }
+  .table-wrap { overflow-x: auto; }
+
+  .btn { border: 0; border-radius: 999px; padding: 0.5rem 1rem; font-weight: 700; font-size: 0.85rem; }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-teal { background: var(--teal); color: #fff; }
+  .btn-ghost { background: none; border: 1.5px solid var(--line); color: var(--ink-soft); }
+  .btn-ghost:hover { border-color: var(--brand); color: var(--brand); }
+  .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.78rem; }
+  .btn[disabled] { opacity: 0.5; cursor: wait; }
+
+  .pill { display: inline-block; padding: 0.12rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+  .pill.active, .pill.approved, .pill.live, .pill.converted { background: #e2f3e9; color: var(--good); }
+  .pill.new, .pill.draft { background: #fdeee7; color: var(--brand); }
+  .pill.contacted { background: #fff3d6; color: var(--warn); }
+  .pill.paused { background: #eee9e0; color: var(--ink-soft); }
+  .pill.churned, .pill.closed, .pill.archived { background: #fbe4e4; color: var(--bad); }
+
+  form.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.7rem; align-items: end; }
+  form.grid label { font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); display: grid; gap: 0.25rem; }
+  form.grid .full { grid-column: 1 / -1; }
+
+  /* revenue chart */
+  .chart { display: flex; align-items: flex-end; gap: 10px; height: 180px; padding-top: 0.5rem; }
+  .chart .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; height: 100%; position: relative; }
+  .chart .bar { width: 100%; max-width: 64px; background: var(--teal); border-radius: 4px 4px 0 0; min-height: 2px; transition: background 0.15s; }
+  .chart .col:hover .bar { background: var(--teal-soft); }
+  .chart .val { font-size: 0.78rem; font-weight: 700; color: var(--ink-soft); }
+  .chart .lbl { font-size: 0.75rem; color: var(--ink-muted); }
+
+  .empty { padding: 2rem; text-align: center; color: var(--ink-muted); }
+  .notice { padding: 0.7rem 1rem; border-radius: 10px; font-size: 0.87rem; margin-bottom: 1rem; }
+  .notice.warn { background: #fff3d6; color: #7a5200; }
+  .notice.ok { background: #e2f3e9; color: var(--good); }
+
+  dialog { border: 0; border-radius: var(--radius); padding: 0; max-width: 760px; width: 92%; max-height: 85vh; }
+  dialog::backdrop { background: rgba(22, 52, 60, 0.55); }
+  .dialog-body { padding: 1.4rem; overflow-y: auto; max-height: 85vh; }
+  .dialog-body h3 { margin: 1.1rem 0 0.4rem; color: var(--teal); }
+  .dialog-body h3:first-of-type { margin-top: 0.8rem; }
+  .ad-card { border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem 1rem; margin: 0.5rem 0; }
+  .ad-card .platform { font-size: 0.75rem; font-weight: 700; color: var(--brand); text-transform: uppercase; }
+  .close-x { float: right; background: none; border: 0; font-size: 1.3rem; color: var(--ink-muted); }
+  #toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 0.7rem 1.3rem; border-radius: 999px; font-size: 0.88rem; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Local<span>Lift</span> Admin</div>
+  <nav id="nav">
+    <button data-tab="dashboard" class="on">Dashboard</button>
+    <button data-tab="leads">Leads</button>
+    <button data-tab="clients">Clients</button>
+    <button data-tab="payments">Payments</button>
+    <button data-tab="campaigns">AI Campaigns</button>
+  </nav>
+</header>
+
+<main id="main"></main>
+<dialog id="modal"><div class="dialog-body" id="modal-body"></div></dialog>
+<div id="toast" role="status"></div>
+
+<script>
+const $ = (sel, el = document) => el.querySelector(sel);
+const main = $('#main');
+const money = (n) => '$' + Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function api(path, opts = {}) {
+  const res = await fetch('/api/admin' + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ================= Dashboard ================= */
+
+async function renderDashboard() {
+  const o = await api('/overview');
+  const max = Math.max(...o.revenueByMonth.map((m) => m.revenue), 1);
+  const monthName = (key) => new Date(key + '-15').toLocaleString('en-US', { month: 'short' });
+
+  main.innerHTML = `
+    <h2>Dashboard</h2>
+    ${o.aiEnabled ? '' : `<div class="notice warn">AI campaigns are off — add <strong>ANTHROPIC_API_KEY</strong> to your .env to turn the campaign agents on.</div>`}
+    ${o.autoCampaigns ? `<div class="notice ok">Auto-campaigns are ON — every active client gets a fresh monthly campaign automatically.</div>` : ''}
+    <div class="tiles">
+      <div class="tile"><div class="label">Monthly recurring</div><div class="value">${money(o.mrr)}</div><div class="sub">from ${o.activeClients} active client${o.activeClients === 1 ? '' : 's'}</div></div>
+      <div class="tile"><div class="label">Total collected</div><div class="value">${money(o.totalRevenue)}</div><div class="sub">all recorded payments</div></div>
+      <div class="tile"><div class="label">Clients</div><div class="value">${o.activeClients}<span style="font-size:1rem;color:var(--ink-muted)"> / ${o.totalClients}</span></div><div class="sub">active / total</div></div>
+      <div class="tile"><div class="label">New leads</div><div class="value">${o.newLeads}</div><div class="sub">${o.totalLeads} all time</div></div>
+      <div class="tile"><div class="label">Draft campaigns</div><div class="value">${o.draftCampaigns}</div><div class="sub">waiting for your review</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Revenue — last 6 months</h3></div>
+      <div class="chart" role="img" aria-label="Bar chart of revenue for the last six months">
+        ${o.revenueByMonth.map((m) => `
+          <div class="col" title="${monthName(m.month)}: ${money(m.revenue)}">
+            <span class="val">${m.revenue ? money(m.revenue) : ''}</span>
+            <div class="bar" style="height:${Math.round((m.revenue / max) * 100)}%"></div>
+            <span class="lbl">${monthName(m.month)}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+/* ================= Leads ================= */
+
+async function renderLeads() {
+  const leads = await api('/leads');
+  main.innerHTML = `
+    <h2>Leads</h2>
+    <div class="panel"><div class="table-wrap">
+    ${leads.length ? `<table>
+      <thead><tr><th>Received</th><th>Contact</th><th>Business</th><th>Interest</th><th>Message</th><th>Status</th><th></th></tr></thead>
+      <tbody>${leads.map((l) => `
+        <tr>
+          <td>${new Date(l.receivedAt).toLocaleDateString()}<div class="small">${new Date(l.receivedAt).toLocaleTimeString()}</div></td>
+          <td>${esc(l.name)}<div class="small"><a href="mailto:${esc(l.email)}">${esc(l.email)}</a>${l.phone ? ' · ' + esc(l.phone) : ''}</div></td>
+          <td>${esc(l.business)}</td>
+          <td>${esc(l.plan || '')}<div class="small">${esc(l.budget || '')}</div></td>
+          <td style="max-width:280px">${esc(l.message)}</td>
+          <td>
+            <select data-lead-status="${l.id}" aria-label="Lead status">
+              ${['new', 'contacted', 'converted', 'closed'].map((s) => `<option ${l.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </td>
+          <td style="white-space:nowrap">
+            ${l.status !== 'converted' ? `<button class="btn btn-teal btn-sm" data-convert="${l.id}">→ Client</button>` : ''}
+            <button class="btn btn-ghost btn-sm" data-del-lead="${l.id}">Delete</button>
+          </td>
+        </tr>`).join('')}</tbody>
+    </table>` : `<div class="empty">No leads yet. They arrive here when someone submits the website form.</div>`}
+    </div></div>`;
+}
+
+/* ================= Clients ================= */
+
+const PLANS = ['Inicial', 'Crecimiento', 'Pro', 'Custom'];
+
+async function renderClients() {
+  const clients = await api('/clients');
+  main.innerHTML = `
+    <h2>Clients</h2>
+    <div class="panel">
+      <div class="panel-head"><h3>Add a client</h3></div>
+      <form class="grid" id="client-form">
+        <label>Owner name<input name="name" required></label>
+        <label>Business<input name="business" required></label>
+        <label>Email<input name="email" type="email"></label>
+        <label>Phone / WhatsApp<input name="phone"></label>
+        <label>Plan<select name="plan">${PLANS.map((p) => `<option>${p}</option>`).join('')}</select></label>
+        <label>Monthly fee ($)<input name="monthlyFee" type="number" min="0" value="399"></label>
+        <label>Industry<input name="industry" placeholder="restaurant, salon, taller..."></label>
+        <label class="full">Goals / notes for the AI agents<textarea name="goals" rows="2" placeholder="E.g. wants more weekend customers; bilingual audience; best sellers are..."></textarea></label>
+        <div><button class="btn btn-primary">Add client</button></div>
+      </form>
+    </div>
+    <div class="panel"><div class="table-wrap">
+    ${clients.length ? `<table>
+      <thead><tr><th>Business</th><th>Plan</th><th>Fee/mo</th><th>Paid total</th><th>Campaigns</th><th>Status</th><th></th></tr></thead>
+      <tbody>${clients.map((c) => `
+        <tr>
+          <td>${esc(c.business)}<div class="small">${esc(c.name)} · ${esc(c.email)}</div></td>
+          <td>${esc(c.plan)}</td>
+          <td>${money(c.monthlyFee)}</td>
+          <td>${money(c.totalPaid)}</td>
+          <td>${c.campaigns}</td>
+          <td>
+            <select data-client-status="${c.id}" aria-label="Client status">
+              ${['active', 'paused', 'churned'].map((s) => `<option ${c.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-teal btn-sm" data-gen="${c.id}">✨ New campaign</button>
+            <button class="btn btn-ghost btn-sm" data-del-client="${c.id}">Delete</button>
+          </td>
+        </tr>`).join('')}</tbody>
+    </table>` : `<div class="empty">No clients yet. Add one above, or convert a lead.</div>`}
+    </div></div>`;
+}
+
+/* ================= Payments ================= */
+
+async function renderPayments() {
+  const [payments, clients] = await Promise.all([api('/payments'), api('/clients')]);
+  main.innerHTML = `
+    <h2>Payments</h2>
+    <div class="panel">
+      <div class="panel-head"><h3>Record a payment</h3></div>
+      <form class="grid" id="payment-form">
+        <label>Client<select name="clientId" required>
+          <option value="">Choose…</option>
+          ${clients.map((c) => `<option value="${c.id}">${esc(c.business || c.name)}</option>`).join('')}
+        </select></label>
+        <label>Amount ($)<input name="amount" type="number" min="1" step="0.01" required></label>
+        <label>Date<input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}"></label>
+        <label>Method<select name="method"><option>Zelle</option><option>Cash</option><option>Card</option><option>Transfer</option><option>Other</option></select></label>
+        <label>Note<input name="note" placeholder="July retainer"></label>
+        <div><button class="btn btn-primary">Record</button></div>
+      </form>
+    </div>
+    <div class="panel"><div class="table-wrap">
+    ${payments.length ? `<table>
+      <thead><tr><th>Date</th><th>Client</th><th>Amount</th><th>Method</th><th>Note</th><th></th></tr></thead>
+      <tbody>${payments.map((p) => `
+        <tr>
+          <td>${esc(p.date)}</td>
+          <td>${esc(p.clientName)}</td>
+          <td><strong>${money(p.amount)}</strong></td>
+          <td>${esc(p.method)}</td>
+          <td>${esc(p.note)}</td>
+          <td><button class="btn btn-ghost btn-sm" data-del-payment="${p.id}">Delete</button></td>
+        </tr>`).join('')}</tbody>
+    </table>` : `<div class="empty">No payments recorded yet.</div>`}
+    </div></div>`;
+}
+
+/* ================= Campaigns ================= */
+
+let campaignCache = [];
+
+async function renderCampaigns() {
+  campaignCache = await api('/campaigns');
+  main.innerHTML = `
+    <h2>AI Campaigns</h2>
+    <p style="color:var(--ink-soft);margin-bottom:1rem">Two AI agents (a strategist + a media planner) create these. Review each draft, tweak if needed, then mark it approved or live. Generate new ones from the Clients tab.</p>
+    <div class="panel"><div class="table-wrap">
+    ${campaignCache.length ? `<table>
+      <thead><tr><th>Month</th><th>Client</th><th>Campaign</th><th>Status</th><th></th></tr></thead>
+      <tbody>${campaignCache.map((k) => `
+        <tr>
+          <td>${esc(k.month)}</td>
+          <td>${esc(k.clientName)}</td>
+          <td><strong>${esc(k.plan.name)}</strong><div class="small">${esc(k.plan.objective)}</div></td>
+          <td>
+            <select data-campaign-status="${k.id}" aria-label="Campaign status">
+              ${['draft', 'approved', 'live', 'archived'].map((s) => `<option ${k.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-teal btn-sm" data-view="${k.id}">Open</button>
+            <button class="btn btn-ghost btn-sm" data-del-campaign="${k.id}">Delete</button>
+          </td>
+        </tr>`).join('')}</tbody>
+    </table>` : `<div class="empty">No campaigns yet. Go to Clients and hit “✨ New campaign”.</div>`}
+    </div></div>`;
+}
+
+function showCampaign(k, clientName) {
+  const p = k.plan;
+  $('#modal-body').innerHTML = `
+    <button class="close-x" onclick="document.getElementById('modal').close()" aria-label="Close">✕</button>
+    <span class="pill ${k.status}">${k.status}</span> <strong>${esc(k.month)}</strong> ${clientName ? '· ' + esc(clientName) : ''}
+    <h2 style="margin-top:0.4rem">${esc(p.name)}</h2>
+    <p style="color:var(--ink-soft)">${esc(p.objective)}</p>
+    <h3>Strategy</h3><p>${esc(p.strategySummary)}</p>
+    <h3>Target audience</h3><p>${esc(p.targetAudience)}</p>
+    <h3>Budget split</h3>
+    <ul style="padding-left:1.2rem">${p.budgetSplit.map((b) => `<li><strong>${esc(b.channel)} — ${b.percent}%</strong>: ${esc(b.rationale)}</li>`).join('')}</ul>
+    <h3>Ads (ES / EN)</h3>
+    ${p.ads.map((a) => `
+      <div class="ad-card">
+        <div class="platform">${esc(a.platform)}</div>
+        <strong>${esc(a.headline)}</strong>
+        <p>${esc(a.primaryText)}</p>
+        <p class="small" style="color:var(--ink-muted)"><em>EN: ${esc(a.headlineEn)} — ${esc(a.primaryTextEn)}</em></p>
+        <span class="pill draft">CTA: ${esc(a.cta)}</span>
+      </div>`).join('')}
+    <h3>4-week calendar</h3>
+    ${p.weeklyCalendar.map((w) => `<p><strong>Week ${w.week} — ${esc(w.focus)}</strong></p><ul style="padding-left:1.2rem">${w.actions.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>`).join('')}
+    <h3>KPIs</h3>
+    <ul style="padding-left:1.2rem">${p.kpis.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+    <details style="margin-top:1rem"><summary style="cursor:pointer;font-weight:600">Strategist's raw brainstorm</summary><pre style="white-space:pre-wrap;font-size:0.82rem;color:var(--ink-soft);margin-top:0.5rem">${esc(k.brainstorm)}</pre></details>
+  `;
+  $('#modal').showModal();
+}
+
+/* ================= Global delegated events ================= */
+
+main.addEventListener('change', async (e) => {
+  const d = e.target.dataset || {};
+  try {
+    if (d.leadStatus) { await api('/leads/' + d.leadStatus, { method: 'PATCH', body: { status: e.target.value } }); toast('Lead updated'); }
+    if (d.clientStatus) { await api('/clients/' + d.clientStatus, { method: 'PATCH', body: { status: e.target.value } }); toast('Client updated'); }
+    if (d.campaignStatus) { await api('/campaigns/' + d.campaignStatus, { method: 'PATCH', body: { status: e.target.value } }); toast('Campaign updated'); }
+  } catch (err) { alert(err.message); }
+});
+
+main.addEventListener('click', async (e) => {
+  const d = e.target.dataset || {};
+  try {
+    if (d.convert) {
+      const fee = prompt('Monthly fee for this client ($)?', '399');
+      if (fee === null) return;
+      await api('/leads/' + d.convert + '/convert', { method: 'POST', body: { monthlyFee: Number(fee) } });
+      toast('Converted to client 🎉');
+      renderLeads();
+    }
+    if (d.delLead && confirm('Delete this lead?')) { await api('/leads/' + d.delLead, { method: 'DELETE' }); renderLeads(); }
+    if (d.gen) {
+      const btn = e.target;
+      btn.disabled = true;
+      btn.textContent = 'Agents working…';
+      try {
+        const campaign = await api('/clients/' + d.gen + '/campaigns', { method: 'POST', body: {} });
+        toast(`Campaign "${campaign.plan.name}" created`);
+        showCampaign(campaign, '');
+      } catch (err) {
+        alert('Campaign generation failed: ' + err.message);
+      }
+      btn.disabled = false;
+      btn.textContent = '✨ New campaign';
+    }
+    if (d.delClient && confirm('Delete this client and their payments/campaigns?')) { await api('/clients/' + d.delClient, { method: 'DELETE' }); renderClients(); }
+    if (d.delPayment && confirm('Delete this payment?')) { await api('/payments/' + d.delPayment, { method: 'DELETE' }); renderPayments(); }
+    if (d.view) {
+      const k = campaignCache.find((c) => c.id === d.view);
+      if (k) showCampaign(k, k.clientName);
+    }
+    if (d.delCampaign && confirm('Delete this campaign?')) { await api('/campaigns/' + d.delCampaign, { method: 'DELETE' }); renderCampaigns(); }
+  } catch (err) { alert(err.message); }
+});
+
+main.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = Object.fromEntries(new FormData(e.target));
+  try {
+    if (e.target.id === 'client-form') { await api('/clients', { method: 'POST', body }); toast('Client added'); renderClients(); }
+    if (e.target.id === 'payment-form') { await api('/payments', { method: 'POST', body }); toast('Payment recorded 💸'); renderPayments(); }
+  } catch (err) { alert(err.message); }
+});
+
+/* ================= Router ================= */
+
+const tabs = { dashboard: renderDashboard, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns };
+
+$('#nav').addEventListener('click', (e) => {
+  const tab = e.target.dataset?.tab;
+  if (!tab) return;
+  document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('on', b === e.target));
+  tabs[tab]().catch((err) => { main.innerHTML = `<div class="notice warn">Error: ${esc(err.message)}</div>`; });
+});
+
+renderDashboard();
+</script>
+</body>
+</html>

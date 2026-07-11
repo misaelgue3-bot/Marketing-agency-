@@ -1,10 +1,18 @@
 /**
- * LocalLift Marketing — site server + lead capture backend
+ * LocalLift Marketing — site server + agency backend
  *
- * - Serves the static landing site from /public
- * - POST /api/contact  -> validates + stores leads in data/leads.json,
- *                         optionally emails you (set SMTP_* in .env)
- * - GET  /admin        -> password-protected lead dashboard
+ * Public:
+ *   - Static landing site (Spanish at /, English at /en.html)
+ *   - POST /api/contact — lead capture (validation, honeypot, rate limit)
+ *
+ * Admin (basic auth, ADMIN_PASSWORD required):
+ *   - GET  /admin                  — dashboard UI (clients, money, leads, campaigns)
+ *   - /api/admin/*                 — JSON API backing the dashboard
+ *
+ * AI automation (ANTHROPIC_API_KEY required):
+ *   - POST /api/admin/clients/:id/campaigns — agents brainstorm + build a campaign
+ *   - AUTO_CAMPAIGNS=true — every active client gets a fresh campaign each month,
+ *     generated automatically with no human input
  */
 
 const express = require('express');
@@ -12,35 +20,21 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+const store = require('./lib/db');
+const agents = require('./lib/agents');
+
 let nodemailer = null;
 try { nodemailer = require('nodemailer'); } catch { /* email disabled */ }
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, 'data');
-const LEADS_FILE = path.join(DATA_DIR, 'leads.json');
 
-app.use(express.json({ limit: '32kb' }));
+app.use(express.json({ limit: '64kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ---------- lead storage ----------
-
-function readLeads() {
-  try {
-    return JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
-  } catch {
-    return [];
-  }
-}
-
-function saveLead(lead) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  const leads = readLeads();
-  leads.push(lead);
-  fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
-}
-
-// ---------- email notifications (optional) ----------
+/* ============================================================
+ * Email notifications (optional)
+ * ============================================================ */
 
 function sendNotification(lead) {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, NOTIFY_EMAIL } = process.env;
@@ -63,31 +57,32 @@ function sendNotification(lead) {
         `Email:    ${lead.email}`,
         `Phone:    ${lead.phone || '-'}`,
         `Business: ${lead.business || '-'}`,
+        `Plan:     ${lead.plan || '-'}`,
         `Budget:   ${lead.budget || '-'}`,
-        ``,
-        `Message:`,
+        '',
+        'Message:',
         lead.message,
-        ``,
+        '',
         `Received: ${lead.receivedAt}`,
       ].join('\n'),
     })
     .catch((err) => console.error('Email notification failed:', err.message));
 }
 
-// ---------- simple rate limiting ----------
+/* ============================================================
+ * Public contact endpoint
+ * ============================================================ */
 
 const submissions = new Map(); // ip -> timestamps
 function rateLimited(ip) {
   const now = Date.now();
-  const windowMs = 10 * 60 * 1000; // 10 minutes
+  const windowMs = 10 * 60 * 1000;
   const recent = (submissions.get(ip) || []).filter((t) => now - t < windowMs);
   submissions.set(ip, recent);
   if (recent.length >= 5) return true;
   recent.push(now);
   return false;
 }
-
-// ---------- contact endpoint ----------
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -98,9 +93,9 @@ app.post('/api/contact', (req, res) => {
     return res.status(429).json({ ok: false, error: 'Too many submissions. Please try again later.' });
   }
 
-  const { name, email, phone, business, budget, message, website } = req.body || {};
+  const { name, email, phone, business, plan, budget, message, website } = req.body || {};
 
-  // Honeypot: the hidden "website" field should stay empty for humans.
+  // Honeypot: hidden field humans never fill
   if (website) return res.json({ ok: true });
 
   const errors = [];
@@ -117,13 +112,15 @@ app.post('/api/contact', (req, res) => {
     email: clean(email, 150),
     phone: clean(phone, 40),
     business: clean(business, 120),
+    plan: clean(plan, 40),
     budget: clean(budget, 40),
     message: clean(message, 2000),
+    status: 'new', // new | contacted | converted | closed
     receivedAt: new Date().toISOString(),
   };
 
   try {
-    saveLead(lead);
+    store.addLead(lead);
   } catch (err) {
     console.error('Failed to save lead:', err);
     return res.status(500).json({ ok: false, error: 'Something went wrong. Please email us directly.' });
@@ -133,7 +130,9 @@ app.post('/api/contact', (req, res) => {
   res.json({ ok: true });
 });
 
-// ---------- admin dashboard ----------
+/* ============================================================
+ * Admin auth
+ * ============================================================ */
 
 function requireAdmin(req, res, next) {
   const user = process.env.ADMIN_USER || 'admin';
@@ -142,7 +141,7 @@ function requireAdmin(req, res, next) {
   if (!pass) {
     return res
       .status(503)
-      .send('Admin dashboard is disabled. Set ADMIN_PASSWORD in your .env file to enable it.');
+      .send('Admin is disabled. Set ADMIN_PASSWORD in your .env file to enable it.');
   }
 
   const header = req.headers.authorization || '';
@@ -150,10 +149,8 @@ function requireAdmin(req, res, next) {
   if (scheme === 'Basic' && encoded) {
     const [u, p] = Buffer.from(encoded, 'base64').toString().split(':');
     const ok =
-      u &&
-      p &&
-      u.length === user.length &&
-      p.length === pass.length &&
+      u && p &&
+      u.length === user.length && p.length === pass.length &&
       crypto.timingSafeEqual(Buffer.from(u), Buffer.from(user)) &&
       crypto.timingSafeEqual(Buffer.from(p), Buffer.from(pass));
     if (ok) return next();
@@ -163,64 +160,218 @@ function requireAdmin(req, res, next) {
   res.status(401).send('Authentication required.');
 }
 
-const esc = (s) =>
-  String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
 app.get('/admin', requireAdmin, (req, res) => {
-  const leads = readLeads().slice().reverse();
-  const rows = leads
-    .map(
-      (l) => `<tr>
-        <td>${esc(new Date(l.receivedAt).toLocaleString())}</td>
-        <td>${esc(l.name)}</td>
-        <td><a href="mailto:${esc(l.email)}">${esc(l.email)}</a></td>
-        <td>${esc(l.phone)}</td>
-        <td>${esc(l.business)}</td>
-        <td>${esc(l.budget)}</td>
-        <td class="msg">${esc(l.message)}</td>
-      </tr>`
-    )
-    .join('\n');
+  res.sendFile(path.join(__dirname, 'admin-ui', 'index.html'));
+});
 
-  res.send(`<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Leads — LocalLift Admin</title>
-<style>
-  body { font-family: system-ui, sans-serif; margin: 2rem; color: #1a2233; }
-  h1 { font-size: 1.4rem; }
-  .count { color: #5a6478; margin-bottom: 1rem; }
-  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
-  th, td { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 1px solid #e3e7ef; vertical-align: top; }
-  th { background: #f4f6fa; position: sticky; top: 0; }
-  tr:hover { background: #fafbfe; }
-  .msg { max-width: 420px; white-space: pre-wrap; }
-  .empty { padding: 3rem; text-align: center; color: #5a6478; background: #f4f6fa; border-radius: 8px; }
-  a.export { display: inline-block; margin-bottom: 1rem; }
-</style>
-</head>
-<body>
-  <h1>Leads</h1>
-  <p class="count">${leads.length} total</p>
-  <a class="export" href="/admin/leads.json">Download raw JSON</a>
-  ${
-    leads.length
-      ? `<table><thead><tr><th>Received</th><th>Name</th><th>Email</th><th>Phone</th><th>Business</th><th>Budget</th><th>Message</th></tr></thead><tbody>${rows}</tbody></table>`
-      : `<div class="empty">No leads yet. Share your site and they'll show up here.</div>`
+/* ============================================================
+ * Admin API
+ * ============================================================ */
+
+const admin = express.Router();
+admin.use(requireAdmin);
+
+// ---- overview / money progress ----
+admin.get('/overview', (req, res) => {
+  const { clients, payments, leads, campaigns } = store.db;
+  const active = clients.filter((c) => c.status === 'active');
+  const mrr = active.reduce((sum, c) => sum + (c.monthlyFee || 0), 0);
+  const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+
+  // Revenue by month, last 6 months
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = d.toISOString().slice(0, 7);
+    months.push({
+      month: key,
+      revenue: payments
+        .filter((p) => (p.date || '').slice(0, 7) === key)
+        .reduce((sum, p) => sum + p.amount, 0),
+    });
   }
-</body>
-</html>`);
+
+  res.json({
+    mrr,
+    totalRevenue,
+    activeClients: active.length,
+    totalClients: clients.length,
+    newLeads: leads.filter((l) => l.status === 'new').length,
+    totalLeads: leads.length,
+    draftCampaigns: campaigns.filter((c) => c.status === 'draft').length,
+    revenueByMonth: months,
+    aiEnabled: agents.available(),
+    autoCampaigns: process.env.AUTO_CAMPAIGNS === 'true',
+  });
 });
 
-app.get('/admin/leads.json', requireAdmin, (req, res) => {
-  res.json(readLeads());
+// ---- leads ----
+admin.get('/leads', (req, res) => res.json(store.db.leads.slice().reverse()));
+
+admin.patch('/leads/:id', (req, res) => {
+  const lead = store.db.leads.find((l) => l.id === req.params.id);
+  if (!lead) return res.status(404).json({ error: 'Lead not found' });
+  if (req.body.status) lead.status = String(req.body.status);
+  store.persist();
+  res.json(lead);
 });
+
+admin.post('/leads/:id/convert', (req, res) => {
+  const lead = store.db.leads.find((l) => l.id === req.params.id);
+  if (!lead) return res.status(404).json({ error: 'Lead not found' });
+  const client = store.addClient({
+    name: lead.name,
+    business: lead.business,
+    email: lead.email,
+    phone: lead.phone,
+    plan: req.body.plan || lead.plan || 'Inicial',
+    monthlyFee: req.body.monthlyFee || 0,
+    goals: lead.message,
+  });
+  lead.status = 'converted';
+  store.persist();
+  res.json(client);
+});
+
+admin.delete('/leads/:id', (req, res) => {
+  res.json({ ok: store.deleteLead(req.params.id) });
+});
+
+// ---- clients ----
+admin.get('/clients', (req, res) => {
+  const clients = store.db.clients.map((c) => ({
+    ...c,
+    totalPaid: store.db.payments
+      .filter((p) => p.clientId === c.id)
+      .reduce((sum, p) => sum + p.amount, 0),
+    campaigns: store.db.campaigns.filter((k) => k.clientId === c.id).length,
+  }));
+  res.json(clients.slice().reverse());
+});
+
+admin.post('/clients', (req, res) => res.json(store.addClient(req.body || {})));
+
+admin.patch('/clients/:id', (req, res) => {
+  const client = store.updateClient(req.params.id, req.body || {});
+  if (!client) return res.status(404).json({ error: 'Client not found' });
+  res.json(client);
+});
+
+admin.delete('/clients/:id', (req, res) => {
+  res.json({ ok: store.deleteClient(req.params.id) });
+});
+
+// ---- payments ----
+admin.get('/payments', (req, res) => {
+  const byClient = new Map(store.db.clients.map((c) => [c.id, c]));
+  res.json(
+    store.db.payments
+      .slice()
+      .reverse()
+      .map((p) => ({
+        ...p,
+        clientName: byClient.get(p.clientId)?.business || byClient.get(p.clientId)?.name || '(deleted client)',
+      }))
+  );
+});
+
+admin.post('/payments', (req, res) => {
+  const { clientId, amount } = req.body || {};
+  if (!clientId || !store.db.clients.some((c) => c.id === clientId)) {
+    return res.status(400).json({ error: 'Valid clientId is required' });
+  }
+  if (!Number(amount)) return res.status(400).json({ error: 'Amount is required' });
+  res.json(store.addPayment(req.body));
+});
+
+admin.delete('/payments/:id', (req, res) => {
+  res.json({ ok: store.deletePayment(req.params.id) });
+});
+
+// ---- campaigns ----
+admin.get('/campaigns', (req, res) => {
+  const byClient = new Map(store.db.clients.map((c) => [c.id, c]));
+  res.json(
+    store.db.campaigns
+      .slice()
+      .reverse()
+      .map((k) => ({
+        ...k,
+        clientName: byClient.get(k.clientId)?.business || byClient.get(k.clientId)?.name || '(deleted client)',
+      }))
+  );
+});
+
+admin.post('/clients/:id/campaigns', async (req, res) => {
+  const client = store.db.clients.find((c) => c.id === req.params.id);
+  if (!client) return res.status(404).json({ error: 'Client not found' });
+  try {
+    const campaign = await agents.generateCampaign(client, { month: req.body?.month });
+    store.addCampaign(campaign);
+    res.json(campaign);
+  } catch (err) {
+    console.error('Campaign generation failed:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+admin.patch('/campaigns/:id', (req, res) => {
+  const campaign = store.db.campaigns.find((c) => c.id === req.params.id);
+  if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+  if (req.body.status) campaign.status = String(req.body.status);
+  store.persist();
+  res.json(campaign);
+});
+
+admin.delete('/campaigns/:id', (req, res) => {
+  const i = store.db.campaigns.findIndex((c) => c.id === req.params.id);
+  if (i === -1) return res.status(404).json({ error: 'Campaign not found' });
+  store.db.campaigns.splice(i, 1);
+  store.persist();
+  res.json({ ok: true });
+});
+
+app.use('/api/admin', admin);
+
+/* ============================================================
+ * Auto-campaign scheduler
+ * When AUTO_CAMPAIGNS=true, checks daily whether each active client
+ * has a campaign for the current month; if not, the agents create one.
+ * ============================================================ */
+
+let autoRunning = false;
+
+async function autoCampaignSweep() {
+  if (autoRunning || process.env.AUTO_CAMPAIGNS !== 'true' || !agents.available()) return;
+  autoRunning = true;
+  const month = new Date().toISOString().slice(0, 7);
+  try {
+    for (const client of store.db.clients.filter((c) => c.status === 'active')) {
+      const has = store.db.campaigns.some((k) => k.clientId === client.id && k.month === month);
+      if (has) continue;
+      try {
+        console.log(`[auto-campaigns] Generating ${month} campaign for ${client.business || client.name}...`);
+        const campaign = await agents.generateCampaign(client, { month });
+        store.addCampaign(campaign);
+        console.log(`[auto-campaigns] Done: "${campaign.plan.name}"`);
+      } catch (err) {
+        console.error(`[auto-campaigns] Failed for ${client.business || client.name}:`, err.message);
+      }
+    }
+  } finally {
+    autoRunning = false;
+  }
+}
+
+setInterval(autoCampaignSweep, 6 * 60 * 60 * 1000); // check every 6 hours
+setTimeout(autoCampaignSweep, 15 * 1000); // and shortly after boot
+
+/* ============================================================ */
 
 app.listen(PORT, () => {
-  console.log(`LocalLift site running at http://localhost:${PORT}`);
-  if (!process.env.ADMIN_PASSWORD) {
-    console.log('Tip: set ADMIN_PASSWORD in .env to enable the /admin lead dashboard.');
-  }
+  console.log(`LocalLift running at http://localhost:${PORT}`);
+  if (!process.env.ADMIN_PASSWORD) console.log('Tip: set ADMIN_PASSWORD in .env to enable the /admin dashboard.');
+  if (!agents.available()) console.log('Tip: set ANTHROPIC_API_KEY in .env to enable AI campaign generation.');
+  if (process.env.AUTO_CAMPAIGNS === 'true') console.log('Auto-campaigns: ON — monthly campaigns generate themselves.');
 });

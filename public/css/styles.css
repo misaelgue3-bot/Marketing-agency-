@@ -541,6 +541,89 @@ h3 { font-size: 1.12rem; font-weight: 700; }
 
 .footer-bottom { padding-top: 1.4rem; font-size: 0.82rem; color: #7fa09b; }
 
+/* ---------- accessibility ---------- */
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--ink);
+  color: #fff;
+  padding: 0.7rem 1.2rem;
+  border-radius: 0 0 10px 0;
+  font-weight: 700;
+  z-index: 100;
+}
+.skip-link:focus { left: 0; }
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- "what happens next" steps under the form ---------- */
+
+.next-steps {
+  list-style: none;
+  display: grid;
+  gap: 0.3rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.9rem;
+  font-size: 0.83rem;
+  color: var(--ink-soft);
+  counter-reset: ns;
+}
+.next-steps li { padding-left: 1.6rem; position: relative; }
+.next-steps li::before {
+  counter-increment: ns;
+  content: counter(ns);
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+/* ---------- WhatsApp floating button ---------- */
+
+.whatsapp-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #23b356;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.15rem;
+  border-radius: 999px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+  transition: transform 0.15s ease;
+}
+.whatsapp-fab:hover { transform: translateY(-2px) scale(1.03); }
+
+@media (max-width: 620px) {
+  .whatsapp-fab span { display: none; }
+  .whatsapp-fab { padding: 0.8rem; }
+}
+
 /* ---------- reveal-on-scroll ---------- */
 
 .reveal {

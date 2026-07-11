@@ -4,7 +4,8 @@ A complete website + backend for a small-business marketing agency:
 
 - **Landing page** (`public/`) — hero, services, flat-rate pricing, process,
   testimonials, FAQ, and a lead-capture contact form. Fully responsive, no
-  frameworks, loads fast.
+  frameworks, loads fast. **Bilingual**: Spanish at `/` (aimed at Latino-owned
+  businesses) and English at `/en.html`, with a language switch in the nav.
 - **Backend** (`server.js`) — Node.js/Express server that:
   - serves the site
   - receives contact form submissions at `POST /api/contact`
@@ -56,8 +57,12 @@ notifications so no lead is lost.
 
 ## Customizing
 
-- **Name & branding**: search for “LocalLift” in `public/index.html` and the
-  colors in `public/css/styles.css` (`:root` variables at the top).
-- **Pricing**: the three plans are plain HTML in the `#pricing` section —
-  edit the numbers and bullet lists directly.
-- **Email address**: replace `hello@locallift.example` in the footer.
+- **Name & branding**: search for “LocalLift” in `public/index.html` and
+  `public/en.html`; colors are the `:root` variables at the top of
+  `public/css/styles.css`.
+- **Pricing**: the three plans ($199 / $399 / $699 per month) are plain HTML
+  in the `#pricing` section of both pages — edit the numbers and bullet
+  lists directly.
+- **Email address**: replace `hola@locallift.example` in both footers.
+- **Languages**: Spanish is the default page; edit or remove `public/en.html`
+  if you only want one language.

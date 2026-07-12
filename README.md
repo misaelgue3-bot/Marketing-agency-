@@ -128,4 +128,4 @@ Any other Node.js host also works: Railway, Fly.io, or a VPS
   (country code + number, no spaces).
 - **Pricing**: plain HTML in the `#pricing` section of both pages, plus
   the plan dropdown in each contact form.
-- **Email address**: replace `hola@locallift.example` in both footers.
+- **Email address**: replace `hola@yourlocallift.com` in both footers.

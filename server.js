@@ -145,6 +145,86 @@ app.post('/api/contact', (req, res) => {
 });
 
 /* ============================================================
+ * Sofía Mini App (Telegram Web App) chat endpoint
+ * ============================================================ */
+
+const miniappHits = new Map(); // telegram user id -> timestamps
+
+app.post('/api/miniapp/chat', async (req, res) => {
+  const { initData, message, history } = req.body || {};
+
+  const session = telegram.verifyInitData(initData);
+  if (!session.ok || !session.user?.id) {
+    return res.status(401).json({ error: 'Abre esta app desde nuestro bot de Telegram. / Open this app from our Telegram bot.' });
+  }
+
+  // 20 messages per 10 minutes per user
+  const uid = String(session.user.id);
+  const now = Date.now();
+  const recent = (miniappHits.get(uid) || []).filter((t) => now - t < 10 * 60 * 1000);
+  if (recent.length >= 20) {
+    return res.status(429).json({ error: 'Muchos mensajes muy rápido — dame un minutito. / Too many messages — give me a minute.' });
+  }
+  recent.push(now);
+  miniappHits.set(uid, recent);
+
+  const text = String(message || '').trim().slice(0, 1000);
+  if (!text) return res.status(400).json({ error: 'Empty message' });
+
+  // First contact becomes a lead (same identity as the bot chat — no duplicates)
+  let lead = store.db.leads.find((l) => l.telegramChatId === uid);
+  if (!lead) {
+    const name = [session.user.first_name, session.user.last_name].filter(Boolean).join(' ') || 'Telegram user';
+    lead = store.addLead({
+      id: crypto.randomUUID(),
+      name,
+      email: '',
+      phone: '',
+      business: session.user.username ? `@${session.user.username} (Telegram)` : '(Telegram app)',
+      plan: '',
+      budget: '',
+      message: text,
+      status: 'new',
+      source: 'telegram-app',
+      telegramChatId: uid,
+      receivedAt: new Date().toISOString(),
+    });
+    telegram.notifyOwner(`📥 Nuevo lead en la app de Sofía: ${lead.name}\n"${text.slice(0, 200)}"\nMíralo en /admin → Leads.`).catch(() => {});
+  }
+
+  const cleanHistory = (Array.isArray(history) ? history : [])
+    .slice(-10)
+    .filter((m) => m && (m.from === 'customer' || m.from === 'sofia') && typeof m.text === 'string')
+    .map((m) => ({ from: m.from, text: m.text.slice(0, 1000) }));
+  if (!cleanHistory.length || cleanHistory[cleanHistory.length - 1].text !== text) {
+    cleanHistory.push({ from: 'customer', text });
+  }
+
+  let reply = telegram.CANNED_REPLY;
+  if (agents.available()) {
+    try {
+      reply = await agents.chatReply(cleanHistory, {
+        customerName: session.user.first_name || '',
+        prices: store.db.settings,
+      });
+    } catch (err) {
+      console.error('[miniapp] Sofía reply failed:', err.message);
+    }
+  }
+
+  store.addOutbox({
+    type: 'sofia_app_chat',
+    clientId: null,
+    to: lead.name,
+    subject: `Mini app: ${text.slice(0, 60)}`,
+    message: `Customer: ${text}\n\nSofía: ${reply}`,
+    status: agents.available() ? 'sent' : 'draft',
+  });
+
+  res.json({ reply });
+});
+
+/* ============================================================
  * Admin auth
  * ============================================================ */
 

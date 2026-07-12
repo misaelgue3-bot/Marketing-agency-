@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Sofía — Your LocalLift</title>
+  <meta name="robots" content="noindex">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #fbf6ed; --ink: #1d2c30; --terra: #e8542f; --gold: #ffb525;
+      --teal: #0f766b; --soft: #5a6f74; --line: #e8dcc8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--cream); color: var(--ink);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: var(--ink); color: var(--cream);
+      padding: 12px 16px calc(12px);
+      display: flex; align-items: center; gap: 10px;
+      flex: none;
+    }
+    .avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--terra), var(--gold));
+      display: grid; place-items: center;
+      font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 17px; color: #fff;
+      flex: none;
+    }
+    .head-name { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 16px; }
+    .head-sub { font-size: 11.5px; color: #9fb9b4; display: flex; align-items: center; gap: 5px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #35c36b; }
+
+    #chat {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 16px 14px 8px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .msg { max-width: 84%; padding: 10px 14px; border-radius: 16px; font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+    .msg.sofia { align-self: flex-start; background: #fff; border: 1.5px solid var(--line); border-bottom-left-radius: 5px; }
+    .msg.me { align-self: flex-end; background: var(--ink); color: var(--cream); border-bottom-right-radius: 5px; }
+    .msg.typing { color: var(--soft); font-style: italic; }
+    .msg.error { background: #fdecec; border: 1.5px solid #e8b4b4; color: #8f1f1f; align-self: flex-start; }
+
+    #chips {
+      flex: none; display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      padding: 8px 14px; scrollbar-width: none;
+    }
+    #chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: none; background: #fff; border: 1.5px solid var(--ink);
+      border-radius: 999px; padding: 8px 14px;
+      font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink);
+      font-family: inherit;
+    }
+    .chip:active { background: var(--gold); }
+
+    #bar {
+      flex: none; display: flex; gap: 8px;
+      padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+      background: var(--cream); border-top: 1.5px solid var(--line);
+    }
+    #input {
+      flex: 1; font: inherit; font-size: 15px;
+      padding: 12px 14px; border: 2px solid var(--line); border-radius: 14px;
+      background: #fff; color: var(--ink); outline: none;
+    }
+    #input:focus { border-color: var(--terra); }
+    #send {
+      flex: none; width: 48px; height: 48px; border: none; border-radius: 14px;
+      background: var(--gold); color: var(--ink); font-size: 19px; cursor: pointer;
+      display: grid; place-items: center;
+    }
+    #send:disabled { opacity: 0.5; }
+
+    #outside {
+      display: none; flex: 1; padding: 40px 24px; text-align: center;
+      flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    }
+    #outside a {
+      background: var(--gold); color: var(--ink); text-decoration: none;
+      font-weight: 800; padding: 14px 22px; border-radius: 14px;
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="avatar">S</div>
+    <div>
+      <div class="head-name">Sofía · Your LocalLift</div>
+      <div class="head-sub"><span class="dot"></span><span id="status">Responde al instante — 24/7</span></div>
+    </div>
+  </header>
+
+  <div id="chat" role="log" aria-live="polite"></div>
+
+  <div id="chips"></div>
+
+  <form id="bar">
+    <input id="input" type="text" autocomplete="off" placeholder="Escribe tu pregunta…" aria-label="Tu mensaje">
+    <button id="send" type="submit" aria-label="Enviar">➤</button>
+  </form>
+
+  <div id="outside">
+    <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:22px">Esta app vive dentro de Telegram</div>
+    <p style="color:var(--soft);font-size:14.5px">Ábrela desde nuestro bot para chatear con Sofía.</p>
+    <a href="https://t.me/yourlocallift_bot">Abrir el bot de Telegram</a>
+  </div>
+
+<script>
+(function () {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const initData = (tg && tg.initData) || '';
+  const chat = document.getElementById('chat');
+  const chips = document.getElementById('chips');
+  const bar = document.getElementById('bar');
+  const input = document.getElementById('input');
+  const send = document.getElementById('send');
+
+  const lang = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code || 'es').startsWith('es') ? 'es' : 'en';
+
+  const T = lang === 'es' ? {
+    greeting: '¡Hola! 👋 Soy Sofía, de Your LocalLift. Cuéntame de tu negocio — te digo cómo conseguir más clientes, cuánto cuesta y qué tan rápido. Sin compromiso.',
+    typing: 'Sofía está escribiendo…',
+    placeholder: 'Escribe tu pregunta…',
+    status: 'Responde al instante — 24/7',
+    netError: 'No pude conectar. Revisa tu internet e intenta de nuevo.',
+    chips: ['💰 ¿Cuánto cuesta?', '🚀 Quiero mi plan gratis', '⏱️ ¿Qué tan rápido veo resultados?', '🎨 Necesito logo y marca', '🌮 Tengo un restaurante'],
+  } : {
+    greeting: "Hi! 👋 I'm Sofía from Your LocalLift. Tell me about your business — I'll tell you how to get more customers, what it costs, and how fast. No commitment.",
+    typing: 'Sofía is typing…',
+    placeholder: 'Type your question…',
+    status: 'Answers instantly — 24/7',
+    netError: "Couldn't connect. Check your internet and try again.",
+    chips: ['💰 How much is it?', '🚀 I want my free plan', '⏱️ How fast do I see results?', '🎨 I need a logo & brand', '🌮 I run a restaurant'],
+  };
+
+  input.placeholder = T.placeholder;
+  document.getElementById('status').textContent = T.status;
+
+  // Outside Telegram: show the fallback screen instead of the chat
+  if (!initData) {
+    chat.style.display = 'none';
+    chips.style.display = 'none';
+    bar.style.display = 'none';
+    document.getElementById('outside').style.display = 'flex';
+    return;
+  }
+
+  tg.ready();
+  tg.expand();
+
+  const history = [];
+  let busy = false;
+
+  function bubble(cls, text) {
+    const el = document.createElement('div');
+    el.className = 'msg ' + cls;
+    el.textContent = text;
+    chat.appendChild(el);
+    chat.scrollTop = chat.scrollHeight;
+    return el;
+  }
+
+  function renderChips() {
+    chips.innerHTML = '';
+    T.chips.forEach((label) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.textContent = label;
+      b.addEventListener('click', () => { if (!busy) submit(label.replace(/^\S+\s/, '')); });
+      chips.appendChild(b);
+    });
+  }
+
+  async function submit(text) {
+    text = (text || '').trim();
+    if (!text || busy) return;
+    busy = true;
+    send.disabled = true;
+    input.value = '';
+    chips.style.display = 'none';
+
+    bubble('me', text);
+    history.push({ from: 'customer', text });
+    const typing = bubble('sofia typing', T.typing);
+
+    try {
+      const res = await fetch('/api/miniapp/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData, message: text, history: history.slice(-10) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      typing.remove();
+      if (res.ok && data.reply) {
+        bubble('sofia', data.reply);
+        history.push({ from: 'sofia', text: data.reply });
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      } else {
+        bubble('error', data.error || T.netError);
+        history.pop();
+      }
+    } catch {
+      typing.remove();
+      bubble('error', T.netError);
+      history.pop();
+    }
+    busy = false;
+    send.disabled = false;
+    input.focus();
+  }
+
+  bar.addEventListener('submit', (e) => { e.preventDefault(); submit(input.value); });
+
+  bubble('sofia', T.greeting);
+  history.push({ from: 'sofia', text: T.greeting });
+  renderChips();
+})();
+</script>
+</body>
+</html>

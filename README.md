@@ -59,6 +59,21 @@ For auto-restart while developing: `npm run dev`
 | `SMTP_*` + `NOTIFY_EMAIL` | Email you every new lead. Works with Gmail App Passwords or any SMTP provider. |
 | `TELEGRAM_BOT_TOKEN` | Sofía answers a Telegram bot live, 24/7 (create one via @BotFather). New chatters become leads automatically. |
 | `TELEGRAM_OWNER_CHAT_ID` | Optional: your Telegram chat id (send `/id` to your bot) for instant lead alerts. |
+| `PUBLIC_URL` | Optional: the site's public URL, used for the Sofía Mini App button in the bot. On Render this is detected automatically (`RENDER_EXTERNAL_URL`). |
+
+### Sofía Mini App (Telegram Web App)
+
+`/sofia-app.html` is a branded chat app that opens **inside Telegram**:
+Sofía's avatar, quick-question chips, and instant AI replies — every
+message is verified server-side against Telegram's `initData` signature,
+first contact becomes a lead, and conversations log to the Outbox.
+
+Two ways users reach it:
+1. `/start` in the bot shows an **"✨ Abrir la app de Sofía"** button
+   automatically (when the public URL is known).
+2. Set it as the bot's **menu button**: @BotFather → `/mybots` → your bot
+   → Bot Settings → Menu Button → set the URL to
+   `https://yourlocallift.com/sofia-app.html` and name it "Sofía".
 
 Leads, clients, payments and campaigns are stored in `data/db.json` —
 simple JSON, easy to back up. On hosts with ephemeral disks (some free

@@ -22,6 +22,7 @@
       display: flex; flex-direction: column;
       overflow: hidden;
     }
+    :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
     header {
       background: var(--ink); color: var(--cream);
@@ -39,6 +40,24 @@
     .head-name { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 16px; }
     .head-sub { font-size: 11.5px; color: #9fb9b4; display: flex; align-items: center; gap: 5px; }
     .dot { width: 7px; height: 7px; border-radius: 50%; background: #35c36b; }
+
+    .lang-switch {
+      margin-left: auto; flex: none;
+      display: flex; border: 1.5px solid #47605f; border-radius: 999px; overflow: hidden;
+    }
+    .lang-switch button {
+      font: inherit; font-size: 12px; font-weight: 700;
+      background: none; border: none; color: #9fb9b4;
+      padding: 7px 11px; cursor: pointer; min-width: 40px;
+    }
+    .lang-switch button[aria-pressed="true"] { background: var(--gold); color: var(--ink); }
+
+    #tg-note {
+      display: none; flex: none;
+      background: #eef7f6; border-bottom: 1.5px solid var(--line);
+      padding: 8px 14px; font-size: 12.5px; color: var(--teal); text-align: center;
+    }
+    #tg-note a { color: var(--teal); font-weight: 700; }
 
     #chat {
       flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -58,7 +77,7 @@
     #chips::-webkit-scrollbar { display: none; }
     .chip {
       flex: none; background: #fff; border: 1.5px solid var(--ink);
-      border-radius: 999px; padding: 8px 14px;
+      border-radius: 999px; padding: 10px 14px; min-height: 40px;
       font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink);
       font-family: inherit;
     }
@@ -81,87 +100,97 @@
       display: grid; place-items: center;
     }
     #send:disabled { opacity: 0.5; }
-
-    #outside {
-      display: none; flex: 1; padding: 40px 24px; text-align: center;
-      flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-    }
-    #outside a {
-      background: var(--gold); color: var(--ink); text-decoration: none;
-      font-weight: 800; padding: 14px 22px; border-radius: 14px;
-      box-shadow: 4px 4px 0 var(--ink);
-    }
   </style>
 </head>
 <body>
   <header>
-    <div class="avatar">S</div>
+    <div class="avatar" aria-hidden="true">S</div>
     <div>
       <div class="head-name">Sofía · Your LocalLift</div>
-      <div class="head-sub"><span class="dot"></span><span id="status">Responde al instante — 24/7</span></div>
+      <div class="head-sub"><span class="dot" aria-hidden="true"></span><span id="status">Responde al instante — 24/7</span></div>
+    </div>
+    <div class="lang-switch" role="group" aria-label="Idioma / Language">
+      <button type="button" id="lang-es" aria-pressed="true">ES</button>
+      <button type="button" id="lang-en" aria-pressed="false">EN</button>
     </div>
   </header>
 
+  <div id="tg-note"></div>
+
   <div id="chat" role="log" aria-live="polite"></div>
 
-  <div id="chips"></div>
+  <div id="chips" role="group" aria-label="Preguntas rápidas"></div>
 
   <form id="bar">
     <input id="input" type="text" autocomplete="off" placeholder="Escribe tu pregunta…" aria-label="Tu mensaje">
     <button id="send" type="submit" aria-label="Enviar">➤</button>
   </form>
 
-  <div id="outside">
-    <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:22px">Esta app vive dentro de Telegram</div>
-    <p style="color:var(--soft);font-size:14.5px">Ábrela desde nuestro bot para chatear con Sofía.</p>
-    <a href="https://t.me/yourlocallift_bot">Abrir el bot de Telegram</a>
-  </div>
-
 <script>
 (function () {
   const tg = window.Telegram && window.Telegram.WebApp;
   const initData = (tg && tg.initData) || '';
+  const inTelegram = Boolean(initData);
   const chat = document.getElementById('chat');
   const chips = document.getElementById('chips');
   const bar = document.getElementById('bar');
   const input = document.getElementById('input');
   const send = document.getElementById('send');
+  const tgNote = document.getElementById('tg-note');
+  const langBtns = { es: document.getElementById('lang-es'), en: document.getElementById('lang-en') };
 
-  const lang = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code || 'es').startsWith('es') ? 'es' : 'en';
-
-  const T = lang === 'es' ? {
-    greeting: '¡Hola! 👋 Soy Sofía, de Your LocalLift. Cuéntame de tu negocio — te digo cómo conseguir más clientes, cuánto cuesta y qué tan rápido. Sin compromiso.',
-    typing: 'Sofía está escribiendo…',
-    placeholder: 'Escribe tu pregunta…',
-    status: 'Responde al instante — 24/7',
-    netError: 'No pude conectar. Revisa tu internet e intenta de nuevo.',
-    chips: ['💰 ¿Cuánto cuesta?', '🚀 Quiero mi plan gratis', '⏱️ ¿Qué tan rápido veo resultados?', '🎨 Necesito logo y marca', '🌮 Tengo un restaurante'],
-  } : {
-    greeting: "Hi! 👋 I'm Sofía from Your LocalLift. Tell me about your business — I'll tell you how to get more customers, what it costs, and how fast. No commitment.",
-    typing: 'Sofía is typing…',
-    placeholder: 'Type your question…',
-    status: 'Answers instantly — 24/7',
-    netError: "Couldn't connect. Check your internet and try again.",
-    chips: ['💰 How much is it?', '🚀 I want my free plan', '⏱️ How fast do I see results?', '🎨 I need a logo & brand', '🌮 I run a restaurant'],
-  };
-
-  input.placeholder = T.placeholder;
-  document.getElementById('status').textContent = T.status;
-
-  // Outside Telegram: show the fallback screen instead of the chat
-  if (!initData) {
-    chat.style.display = 'none';
-    chips.style.display = 'none';
-    bar.style.display = 'none';
-    document.getElementById('outside').style.display = 'flex';
-    return;
+  // Outside Telegram the chat still works — a browser session id takes the
+  // place of Telegram's signed identity, so Sofía is available to everyone.
+  let webId = '';
+  if (!inTelegram) {
+    try { webId = localStorage.getItem('sofia-web-id') || ''; } catch (e) { /* private mode */ }
+    if (!/^[\w-]{8,64}$/.test(webId)) {
+      webId = (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+      try { localStorage.setItem('sofia-web-id', webId); } catch (e) { /* private mode */ }
+    }
   }
 
-  tg.ready();
-  tg.expand();
+  const STRINGS = {
+    es: {
+      greeting: '¡Hola! 👋 Soy Sofía, de Your LocalLift. Cuéntame de tu negocio — te digo cómo conseguir más clientes, cuánto cuesta y qué tan rápido. Sin compromiso.',
+      typing: 'Sofía está escribiendo…',
+      placeholder: 'Escribe tu pregunta…',
+      inputLabel: 'Tu mensaje',
+      sendLabel: 'Enviar',
+      chipsLabel: 'Preguntas rápidas',
+      status: 'Responde al instante — 24/7',
+      netError: 'No pude conectar. Revisa tu internet e intenta de nuevo.',
+      tgNote: '¿Prefieres Telegram? <a href="https://t.me/{{TELEGRAM}}" target="_blank" rel="noopener">Abre nuestro bot</a> y sigue la conversación ahí.',
+      chips: ['💰 ¿Cuánto cuesta?', '🚀 Quiero mi plan gratis', '⏱️ ¿Qué tan rápido veo resultados?', '🎨 Necesito logo y marca', '🌮 Tengo un restaurante'],
+    },
+    en: {
+      greeting: "Hi! 👋 I'm Sofía from Your LocalLift. Tell me about your business — I'll tell you how to get more customers, what it costs, and how fast. No commitment.",
+      typing: 'Sofía is typing…',
+      placeholder: 'Type your question…',
+      inputLabel: 'Your message',
+      sendLabel: 'Send',
+      chipsLabel: 'Quick questions',
+      status: 'Answers instantly — 24/7',
+      netError: "Couldn't connect. Check your internet and try again.",
+      tgNote: 'Prefer Telegram? <a href="https://t.me/{{TELEGRAM}}" target="_blank" rel="noopener">Open our bot</a> and continue the chat there.',
+      chips: ['💰 How much is it?', '🚀 I want my free plan', '⏱️ How fast do I see results?', '🎨 I need a logo & brand', '🌮 I run a restaurant'],
+    },
+  };
 
+  let lang = null;
+  try { lang = localStorage.getItem('sofia-lang'); } catch (e) { /* private mode */ }
+  if (lang !== 'es' && lang !== 'en') {
+    const guess = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) ||
+      navigator.language || 'es';
+    lang = String(guess).toLowerCase().indexOf('es') === 0 ? 'es' : 'en';
+  }
+
+  let T = STRINGS[lang];
   const history = [];
   let busy = false;
+  let started = false; // becomes true after the first customer message
 
   function bubble(cls, text) {
     const el = document.createElement('div');
@@ -184,10 +213,46 @@
     });
   }
 
+  function applyLang(next) {
+    lang = next;
+    T = STRINGS[lang];
+    try { localStorage.setItem('sofia-lang', lang); } catch (e) { /* private mode */ }
+    document.documentElement.lang = lang;
+    langBtns.es.setAttribute('aria-pressed', String(lang === 'es'));
+    langBtns.en.setAttribute('aria-pressed', String(lang === 'en'));
+    input.placeholder = T.placeholder;
+    input.setAttribute('aria-label', T.inputLabel);
+    send.setAttribute('aria-label', T.sendLabel);
+    chips.setAttribute('aria-label', T.chipsLabel);
+    document.getElementById('status').textContent = T.status;
+    if (!inTelegram) tgNote.innerHTML = T.tgNote;
+    if (!started) {
+      // Conversation hasn't begun: restart the greeting in the new language
+      chat.innerHTML = '';
+      history.length = 0;
+      bubble('sofia', T.greeting);
+      history.push({ from: 'sofia', text: T.greeting });
+      renderChips();
+    } else if (chips.childElementCount) {
+      renderChips();
+    }
+  }
+
+  langBtns.es.addEventListener('click', () => { if (lang !== 'es') applyLang('es'); });
+  langBtns.en.addEventListener('click', () => { if (lang !== 'en') applyLang('en'); });
+
+  if (inTelegram) {
+    tg.ready();
+    tg.expand();
+  } else {
+    tgNote.style.display = 'block';
+  }
+
   async function submit(text) {
     text = (text || '').trim();
     if (!text || busy) return;
     busy = true;
+    started = true;
     send.disabled = true;
     input.value = '';
     chips.style.display = 'none';
@@ -197,22 +262,26 @@
     const typing = bubble('sofia typing', T.typing);
 
     try {
-      const res = await fetch('/api/miniapp/chat', {
+      const url = inTelegram ? '/api/miniapp/chat' : '/api/webchat';
+      const payload = inTelegram
+        ? { initData, message: text, history: history.slice(-10) }
+        : { sessionId: webId, message: text, history: history.slice(-10), lang };
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData, message: text, history: history.slice(-10) }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       typing.remove();
       if (res.ok && data.reply) {
         bubble('sofia', data.reply);
         history.push({ from: 'sofia', text: data.reply });
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        if (inTelegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       } else {
         bubble('error', data.error || T.netError);
         history.pop();
       }
-    } catch {
+    } catch (e) {
       typing.remove();
       bubble('error', T.netError);
       history.pop();
@@ -224,9 +293,7 @@
 
   bar.addEventListener('submit', (e) => { e.preventDefault(); submit(input.value); });
 
-  bubble('sofia', T.greeting);
-  history.push({ from: 'sofia', text: T.greeting });
-  renderChips();
+  applyLang(lang);
 })();
 </script>
 </body>

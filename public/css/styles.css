@@ -470,6 +470,12 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 }
 .fab-hint[hidden] { display: none; }
 .fab-hint strong { display: block; }
+.fab-hint-link {
+  display: block; margin-top: 7px; width: fit-content;
+  color: var(--teal); font-weight: 700; text-decoration: none;
+  border-bottom: 2px solid var(--gold);
+}
+.fab-hint-link:hover { color: var(--terra); }
 .fab-hint-close {
   position: absolute; top: 4px; right: 8px;
   background: none; border: 0; font-size: 17px; color: var(--soft); cursor: pointer;

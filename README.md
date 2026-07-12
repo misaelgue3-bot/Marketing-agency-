@@ -61,19 +61,27 @@ For auto-restart while developing: `npm run dev`
 | `TELEGRAM_OWNER_CHAT_ID` | Optional: your Telegram chat id (send `/id` to your bot) for instant lead alerts. |
 | `PUBLIC_URL` | Optional: the site's public URL, used for the Sofía Mini App button in the bot. On Render this is detected automatically (`RENDER_EXTERNAL_URL`). |
 
-### Sofía Mini App (Telegram Web App)
+### Sofía chat app (Telegram Mini App + web chat)
 
-`/sofia-app.html` is a branded chat app that opens **inside Telegram**:
-Sofía's avatar, quick-question chips, and instant AI replies — every
-message is verified server-side against Telegram's `initData` signature,
-first contact becomes a lead, and conversations log to the Outbox.
+`/sofia-app.html` is a branded chat app with Sofía's avatar,
+quick-question chips, a **Spanish/English toggle** in the header
+(remembers the choice, defaults to the visitor's language), and instant
+AI replies. First contact becomes a lead and every conversation logs to
+the Outbox.
 
-Two ways users reach it:
-1. `/start` in the bot shows an **"✨ Abrir la app de Sofía"** button
-   automatically (when the public URL is known).
-2. Set it as the bot's **menu button**: @BotFather → `/mybots` → your bot
-   → Bot Settings → Menu Button → set the URL to
-   `https://yourlocallift.com/sofia-app.html` and name it "Sofía".
+It works for **everyone**, with or without Telegram:
+- **Inside Telegram** every message is verified server-side against
+  Telegram's `initData` signature. The bot's `/start` message and the
+  first reply to any new customer show the
+  **"✨ Abrir la app de Sofía"** button and tell them to press it.
+- **On the web** (`https://yourlocallift.com/sofia-app.html`) the same
+  app runs in any browser — no Telegram account needed. The site's
+  corner hint and the contact section both link to it. Web chats are
+  rate-limited per visitor and per IP.
+
+Also set it as the bot's **menu button**: @BotFather → `/mybots` → your
+bot → Bot Settings → Menu Button → set the URL to
+`https://yourlocallift.com/sofia-app.html` and name it "Sofía".
 
 Leads, clients, payments and campaigns are stored in `data/db.json` —
 simple JSON, easy to back up. On hosts with ephemeral disks (some free

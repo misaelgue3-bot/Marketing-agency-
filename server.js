@@ -51,6 +51,7 @@ function renderPage(file) {
 
 app.get(['/', '/index.html'], (req, res) => res.type('html').send(renderPage('index.html')));
 app.get('/en.html', (req, res) => res.type('html').send(renderPage('en.html')));
+app.get('/sofia-app.html', (req, res) => res.type('html').send(renderPage('sofia-app.html')));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -217,6 +218,93 @@ app.post('/api/miniapp/chat', async (req, res) => {
     clientId: null,
     to: lead.name,
     subject: `Mini app: ${text.slice(0, 60)}`,
+    message: `Customer: ${text}\n\nSofía: ${reply}`,
+    status: agents.available() ? 'sent' : 'draft',
+  });
+
+  res.json({ reply });
+});
+
+/* ============================================================
+ * Sofía web chat — same app, no Telegram account needed.
+ * Identity is a browser-generated session id, so it is rate
+ * limited by both session and IP.
+ * ============================================================ */
+
+const webchatHits = new Map(); // "s:<sessionId>" / "ip:<ip>" -> timestamps
+
+function webchatLimited(key) {
+  const now = Date.now();
+  const recent = (webchatHits.get(key) || []).filter((t) => now - t < 10 * 60 * 1000);
+  if (recent.length >= 20) return true;
+  recent.push(now);
+  webchatHits.set(key, recent);
+  if (webchatHits.size > 2000) {
+    // Drop stale entries so the map can't grow forever
+    for (const [k, times] of webchatHits) {
+      if (!times.length || now - times[times.length - 1] > 10 * 60 * 1000) webchatHits.delete(k);
+    }
+  }
+  return false;
+}
+
+app.post('/api/webchat', async (req, res) => {
+  const { sessionId, message, history, lang } = req.body || {};
+
+  const sid = String(sessionId || '');
+  if (!/^[\w-]{8,64}$/.test(sid)) {
+    return res.status(400).json({ error: 'Recarga la página e intenta de nuevo. / Reload the page and try again.' });
+  }
+
+  if (webchatLimited(`s:${sid}`) || webchatLimited(`ip:${req.ip || 'unknown'}`)) {
+    return res.status(429).json({ error: 'Muchos mensajes muy rápido — dame un minutito. / Too many messages — give me a minute.' });
+  }
+
+  const text = String(message || '').trim().slice(0, 1000);
+  if (!text) return res.status(400).json({ error: 'Empty message' });
+
+  // First contact becomes a lead, deduped by browser session
+  let lead = store.db.leads.find((l) => l.webChatId === sid);
+  if (!lead) {
+    lead = store.addLead({
+      id: crypto.randomUUID(),
+      name: lang === 'en' ? 'Web visitor' : 'Visitante web',
+      email: '',
+      phone: '',
+      business: '(Web chat)',
+      plan: '',
+      budget: '',
+      message: text,
+      status: 'new',
+      source: 'web-chat',
+      webChatId: sid,
+      receivedAt: new Date().toISOString(),
+    });
+    telegram.notifyOwner(`📥 Nuevo chat de Sofía en la web:\n"${text.slice(0, 200)}"\nMíralo en /admin → Leads.`).catch(() => {});
+  }
+
+  const cleanHistory = (Array.isArray(history) ? history : [])
+    .slice(-10)
+    .filter((m) => m && (m.from === 'customer' || m.from === 'sofia') && typeof m.text === 'string')
+    .map((m) => ({ from: m.from, text: m.text.slice(0, 1000) }));
+  if (!cleanHistory.length || cleanHistory[cleanHistory.length - 1].text !== text) {
+    cleanHistory.push({ from: 'customer', text });
+  }
+
+  let reply = telegram.CANNED_REPLY;
+  if (agents.available()) {
+    try {
+      reply = await agents.chatReply(cleanHistory, { customerName: '', prices: store.db.settings });
+    } catch (err) {
+      console.error('[webchat] Sofía reply failed:', err.message);
+    }
+  }
+
+  store.addOutbox({
+    type: 'sofia_web_chat',
+    clientId: null,
+    to: lead.name,
+    subject: `Web chat: ${text.slice(0, 60)}`,
     message: `Customer: ${text}\n\nSofía: ${reply}`,
     status: agents.available() ? 'sent' : 'draft',
   });

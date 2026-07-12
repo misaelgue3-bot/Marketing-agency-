@@ -57,6 +57,8 @@ For auto-restart while developing: `npm run dev`
 | `HIGGSFIELD_API_KEY` / `HIGGSFIELD_API_SECRET` | Lets Valen generate real ad images (get keys at cloud.higgsfield.ai). Optional. |
 | `AUTO_CAMPAIGNS` | `true` = every active client gets a monthly campaign generated automatically. |
 | `SMTP_*` + `NOTIFY_EMAIL` | Email you every new lead. Works with Gmail App Passwords or any SMTP provider. |
+| `TELEGRAM_BOT_TOKEN` | Sofía answers a Telegram bot live, 24/7 (create one via @BotFather). New chatters become leads automatically. |
+| `TELEGRAM_OWNER_CHAT_ID` | Optional: your Telegram chat id (send `/id` to your bot) for instant lead alerts. |
 
 Leads, clients, payments and campaigns are stored in `data/db.json` —
 simple JSON, easy to back up. On hosts with ephemeral disks (some free

@@ -24,6 +24,7 @@ const store = require('./lib/db');
 const agents = require('./lib/agents');
 const mailer = require('./lib/mailer');
 const automations = require('./lib/automations');
+const telegram = require('./lib/telegram');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -218,6 +219,7 @@ admin.get('/overview', (req, res) => {
     imagesEnabled: agents.imagesAvailable(),
     autoCampaigns: process.env.AUTO_CAMPAIGNS === 'true',
     automations: automations.enabledFlags(),
+    telegramEnabled: telegram.available(),
   });
 });
 
@@ -439,4 +441,6 @@ app.listen(PORT, () => {
   if (!agents.available()) console.log('Tip: set ANTHROPIC_API_KEY (Claude) or GROQ_API_KEY (Groq) in .env to enable the AI team.');
   else console.log(`AI team provider: ${agents.providerLabel()}`);
   if (process.env.AUTO_CAMPAIGNS === 'true') console.log('Auto-campaigns: ON — monthly campaigns generate themselves.');
+  if (telegram.start()) console.log('Telegram: Sofía answers the bot chat live.');
+  else console.log('Tip: set TELEGRAM_BOT_TOKEN in .env and Sofía will answer a Telegram bot 24/7.');
 });

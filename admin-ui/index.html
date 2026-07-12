@@ -101,6 +101,7 @@
     <button data-tab="clients">Clients</button>
     <button data-tab="payments">Payments</button>
     <button data-tab="campaigns">AI Campaigns</button>
+    <button data-tab="outbox">Outbox</button>
   </nav>
 </header>
 
@@ -143,7 +144,17 @@ async function renderDashboard() {
     <h2>Dashboard</h2>
     ${o.aiEnabled ? `<div class="notice ok">AI team is on — running on <strong>${esc(o.aiProvider)}</strong>.</div>` : `<div class="notice warn">The AI team is off — add <strong>ANTHROPIC_API_KEY</strong> (Claude, best quality) or <strong>GROQ_API_KEY</strong> (Groq, free tier) to your .env to turn on Sofía, Marco, Lucía and Valen.</div>`}
     ${o.aiEnabled && !o.imagesEnabled ? `<div class="notice warn">Ad images are off — add <strong>HIGGSFIELD_API_KEY</strong> + <strong>HIGGSFIELD_API_SECRET</strong> to let Valen generate real ad visuals.</div>` : ''}
-    ${o.autoCampaigns ? `<div class="notice ok">Auto-campaigns are ON — every active client gets a fresh monthly campaign automatically.</div>` : ''}
+    ${o.automations ? `<div class="panel" style="padding:0.9rem 1.2rem;margin-bottom:1.3rem">
+      <strong style="font-size:0.85rem">Autopilot:</strong>
+      ${[
+        ['Lead auto-reply', o.automations.leadReply],
+        ['Monthly check-ins', o.automations.monthlyCheckins],
+        ['Payment reminders', o.automations.paymentReminders],
+        ['Auto campaigns', o.automations.campaigns],
+        ['Weekly digest', o.automations.weeklyDigest],
+        ['Email sending', o.automations.email],
+      ].map(([n, on]) => `<span class="pill ${on ? 'active' : 'paused'}" style="margin-left:0.5rem">${n}: ${on ? 'ON' : 'off'}</span>`).join('')}
+    </div>` : ''}
     <div class="tiles">
       <div class="tile"><div class="label">Monthly recurring</div><div class="value">${money(o.mrr)}</div><div class="sub">from ${o.activeClients} active client${o.activeClients === 1 ? '' : 's'}</div></div>
       <div class="tile"><div class="label">Total collected</div><div class="value">${money(o.totalRevenue)}</div><div class="sub">all recorded payments</div></div>
@@ -341,6 +352,50 @@ function showCampaign(k, clientName) {
   $('#modal').showModal();
 }
 
+/* ================= Outbox ================= */
+
+const OUTBOX_TYPES = {
+  lead_reply: 'Lead auto-reply', monthly_checkin: 'Monthly check-in',
+  payment_reminder: 'Payment reminder', weekly_digest: 'Weekly digest',
+};
+
+async function renderOutbox() {
+  const outbox = await api('/outbox');
+  main.innerHTML = `
+    <h2>Outbox</h2>
+    <p style="color:var(--ink-soft);margin-bottom:1rem">Everything the automations wrote. <span class="pill approved">sent</span> went out by email; <span class="pill draft">draft</span> is waiting for you to copy &amp; send (configure SMTP to send automatically); <span class="pill churned">failed</span> needs attention.</p>
+    <div class="panel"><div class="table-wrap">
+    ${outbox.length ? `<table>
+      <thead><tr><th>When</th><th>Type</th><th>To</th><th>Subject</th><th>Status</th><th></th></tr></thead>
+      <tbody>${outbox.map((o, i) => `
+        <tr>
+          <td>${new Date(o.createdAt).toLocaleDateString()}<div class="small">${new Date(o.createdAt).toLocaleTimeString()}</div></td>
+          <td>${esc(OUTBOX_TYPES[o.type] || o.type)}${o.clientName ? `<div class="small">${esc(o.clientName)}</div>` : ''}</td>
+          <td>${esc(o.to || '—')}</td>
+          <td style="max-width:260px">${esc(o.subject)}</td>
+          <td><span class="pill ${o.status === 'sent' ? 'approved' : o.status === 'failed' ? 'churned' : 'draft'}">${o.status}</span></td>
+          <td><button class="btn btn-ghost btn-sm" data-outbox="${i}">View</button></td>
+        </tr>`).join('')}</tbody>
+    </table>` : `<div class="empty">Nothing yet. Turn on the automations in your .env (AUTO_LEAD_REPLY, AUTO_MONTHLY_CHECKINS, AUTO_PAYMENT_REMINDERS, WEEKLY_DIGEST) and messages will appear here.</div>`}
+    </div></div>`;
+  window._outboxCache = outbox;
+}
+
+function showOutboxMessage(o) {
+  $('#modal-body').innerHTML = `
+    <button class="close-x" onclick="document.getElementById('modal').close()" aria-label="Close">✕</button>
+    <span class="pill ${o.status === 'sent' ? 'approved' : o.status === 'failed' ? 'churned' : 'draft'}">${o.status}</span>
+    <h2 style="margin-top:0.4rem">${esc(o.subject)}</h2>
+    <p class="small" style="color:var(--ink-muted)">${esc(OUTBOX_TYPES[o.type] || o.type)}${o.to ? ' · to ' + esc(o.to) : ''} · ${new Date(o.createdAt).toLocaleString()}</p>
+    <div class="ad-card" style="white-space:pre-wrap;margin-top:1rem">${esc(o.message)}</div>
+    <button class="btn btn-ghost btn-sm" id="copy-outbox">Copy message</button>`;
+  $('#modal').showModal();
+  $('#copy-outbox').addEventListener('click', () => {
+    navigator.clipboard.writeText(o.message);
+    toast('Copied to clipboard');
+  });
+}
+
 /* ================= Sofía — client message drafting ================= */
 
 const MSG_PURPOSES = [
@@ -445,6 +500,7 @@ main.addEventListener('click', async (e) => {
       if (k) showCampaign(k, k.clientName);
     }
     if (d.delCampaign && confirm('Delete this campaign?')) { await api('/campaigns/' + d.delCampaign, { method: 'DELETE' }); renderCampaigns(); }
+    if (d.outbox !== undefined && window._outboxCache) showOutboxMessage(window._outboxCache[Number(d.outbox)]);
   } catch (err) { alert(err.message); }
 });
 
@@ -459,7 +515,7 @@ main.addEventListener('submit', async (e) => {
 
 /* ================= Router ================= */
 
-const tabs = { dashboard: renderDashboard, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns };
+const tabs = { dashboard: renderDashboard, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns, outbox: renderOutbox };
 
 $('#nav').addEventListener('click', (e) => {
   const tab = e.target.dataset?.tab;

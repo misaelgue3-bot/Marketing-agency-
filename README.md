@@ -62,6 +62,23 @@ Leads, clients, payments and campaigns are stored in `data/db.json` —
 simple JSON, easy to back up. On hosts with ephemeral disks (some free
 tiers), enable a persistent volume so data survives restarts.
 
+## Autopilot
+
+Five independent switches in `.env` put the agency on autopilot. Everything
+the agents write shows up in **Admin → Outbox** — emailed automatically when
+SMTP is configured, held as ready-to-copy drafts when not:
+
+| Switch | What happens |
+|---|---|
+| `AUTO_LEAD_REPLY=true` | Sofía answers every new website lead within a minute — thanks them and sets the 48-hour expectation. |
+| `AUTO_MONTHLY_CHECKINS=true` | On the 1st, Sofía checks in with every active client and asks what to feature this month. |
+| `AUTO_PAYMENT_REMINDERS=true` | Clients with no payment recorded by the 7th get a friendly reminder. |
+| `AUTO_CAMPAIGNS=true` | The creative team builds each active client's monthly campaign. |
+| `WEEKLY_DIGEST=true` | Every Monday you get an email summary: MRR, money collected, new leads, campaigns waiting for review. |
+
+Each automation is idempotent — it never fires twice for the same client and
+period, even across restarts.
+
 ## Typical workflow
 
 1. A business owner submits the website form (or messages you on WhatsApp).

@@ -22,9 +22,8 @@ const crypto = require('crypto');
 
 const store = require('./lib/db');
 const agents = require('./lib/agents');
-
-let nodemailer = null;
-try { nodemailer = require('nodemailer'); } catch { /* email disabled */ }
+const mailer = require('./lib/mailer');
+const automations = require('./lib/automations');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,20 +36,10 @@ app.use(express.static(path.join(__dirname, 'public')));
  * ============================================================ */
 
 function sendNotification(lead) {
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, NOTIFY_EMAIL } = process.env;
-  if (!nodemailer || !SMTP_HOST || !SMTP_USER || !SMTP_PASS || !NOTIFY_EMAIL) return;
-
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT) || 587,
-    secure: Number(SMTP_PORT) === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-  });
-
-  transporter
-    .sendMail({
-      from: `"LocalLift Website" <${SMTP_USER}>`,
-      to: NOTIFY_EMAIL,
+  if (!mailer.available() || !process.env.NOTIFY_EMAIL) return;
+  mailer
+    .send({
+      to: process.env.NOTIFY_EMAIL,
       subject: `New lead: ${lead.name} (${lead.business || 'no business name'})`,
       text: [
         `Name:     ${lead.name}`,
@@ -127,6 +116,8 @@ app.post('/api/contact', (req, res) => {
   }
 
   sendNotification(lead);
+  // Sofía answers the lead automatically when AUTO_LEAD_REPLY=true
+  automations.replyToLead(lead, (m) => console.log(`[auto-reply] ${m}`)).catch(() => {});
   res.json({ ok: true });
 });
 
@@ -205,6 +196,7 @@ admin.get('/overview', (req, res) => {
     aiProvider: agents.providerLabel(),
     imagesEnabled: agents.imagesAvailable(),
     autoCampaigns: process.env.AUTO_CAMPAIGNS === 'true',
+    automations: automations.enabledFlags(),
   });
 });
 
@@ -353,6 +345,22 @@ admin.delete('/campaigns/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ---- outbox (everything the automations drafted or sent) ----
+admin.get('/outbox', (req, res) => {
+  const byClient = new Map(store.db.clients.map((c) => [c.id, c]));
+  res.json(
+    store.db.outbox
+      .slice()
+      .reverse()
+      .map((o) => ({
+        ...o,
+        clientName: o.clientId
+          ? byClient.get(o.clientId)?.business || byClient.get(o.clientId)?.name || '(deleted client)'
+          : '',
+      }))
+  );
+});
+
 app.use('/api/admin', admin);
 
 /* ============================================================
@@ -390,6 +398,10 @@ async function autoCampaignSweep() {
 
 setInterval(autoCampaignSweep, 6 * 60 * 60 * 1000); // check every 6 hours
 setTimeout(autoCampaignSweep, 15 * 1000); // and shortly after boot
+
+// Sofía's automations (check-ins, payment reminders, weekly digest) — hourly
+setInterval(() => automations.runTick(), 60 * 60 * 1000);
+setTimeout(() => automations.runTick(), 30 * 1000);
 
 /* ============================================================ */
 

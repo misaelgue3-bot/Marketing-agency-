@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LocalLift Marketing — Marketing para negocios latinos, a precio justo</title>
-  <meta name="description" content="Ayudamos a negocios latinos a crecer con marketing honesto y accesible: páginas web, redes sociales, SEO local y anuncios. Precios fijos desde $199/mes, sin contratos largos.">
+  <meta name="description" content="Ayudamos a negocios latinos a crecer con marketing honesto y accesible: páginas web, redes sociales, SEO local y anuncios. Precios fijos desde ${{PRICE_1}}/mes, sin contratos largos.">
   <meta property="og:title" content="LocalLift Marketing — Tu negocio merece ser visto">
   <meta property="og:description" content="Páginas web, redes sociales, SEO local y anuncios para negocios latinos. Precio fijo mensual, sin contratos largos, resultados reales.">
   <meta property="og:type" content="website">
@@ -143,7 +143,7 @@
         <div class="pricing-grid">
           <article class="price-card reveal">
             <h3>Inicial</h3>
-            <p class="price"><span>$199</span>/mes</p>
+            <p class="price"><span>${{PRICE_1}}</span>/mes</p>
             <p class="price-tag">Que te encuentren y te vean profesional.</p>
             <ul>
               <li>Página web de una página (creada y hospedada)</li>
@@ -157,7 +157,7 @@
           <article class="price-card featured reveal">
             <p class="badge">El más popular</p>
             <h3>Crecimiento</h3>
-            <p class="price"><span>$399</span>/mes</p>
+            <p class="price"><span>${{PRICE_2}}</span>/mes</p>
             <p class="price-tag">Convierte la visibilidad en clientes.</p>
             <ul>
               <li>Todo lo del plan Inicial</li>
@@ -171,7 +171,7 @@
           </article>
           <article class="price-card reveal">
             <h3>Pro</h3>
-            <p class="price"><span>$699</span>/mes</p>
+            <p class="price"><span>${{PRICE_3}}</span>/mes</p>
             <p class="price-tag">Un equipo de marketing completo, sin nómina.</p>
             <ul>
               <li>Todo lo del plan Crecimiento</li>
@@ -307,9 +307,9 @@
             <label>Plan que te interesa
               <select name="plan" id="plan-select">
                 <option value="">Ayúdenme a elegir</option>
-                <option value="Inicial">Inicial — $199/mes</option>
-                <option value="Crecimiento">Crecimiento — $399/mes</option>
-                <option value="Pro">Pro — $699/mes</option>
+                <option value="Inicial">Inicial — ${{PRICE_1}}/mes</option>
+                <option value="Crecimiento">Crecimiento — ${{PRICE_2}}/mes</option>
+                <option value="Pro">Pro — ${{PRICE_3}}/mes</option>
                 <option value="Proyecto único">Solo un proyecto (ej. una web)</option>
               </select>
             </label>
@@ -363,7 +363,7 @@
         <p class="footer-heading">Contáctanos</p>
         <ul>
           <li><a href="#contact">Pide tu plan gratis</a></li>
-          <li><a href="mailto:hola@yourlocallift.com">hola@yourlocallift.com</a></li>
+          <li><a href="mailto:{{EMAIL}}">{{EMAIL}}</a></li>
         </ul>
       </div>
     </div>
@@ -372,7 +372,7 @@
     </div>
   </footer>
 
-  <a class="whatsapp-fab" href="https://wa.me/15551234567?text=Hola%2C%20quiero%20un%20plan%20de%20marketing%20para%20mi%20negocio"
+  <a class="whatsapp-fab" href="https://wa.me/{{WHATSAPP}}?text=Hola%2C%20quiero%20un%20plan%20de%20marketing%20para%20mi%20negocio"
      target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
     <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M16 3C9.4 3 4 8.3 4 14.9c0 2.1.6 4.1 1.6 5.9L4 29l8.4-1.6c1.7.9 3.6 1.4 5.6 1.4 6.6 0 12-5.3 12-11.9S22.6 3 16 3zm0 21.8c-1.8 0-3.5-.5-5-1.3l-.4-.2-5 1 1-4.8-.3-.4c-1-1.5-1.5-3.3-1.5-5.2 0-5.4 4.6-9.9 10.2-9.9s10.2 4.4 10.2 9.9-4.6 9.9-10.2 9.9zm5.6-7.4c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.6-.1-.2-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.2 3.1 1.3 3.3c.2.2 2.3 3.6 5.7 5 3.4 1.4 3.4.9 4 .9.6-.1 1.8-.7 2.1-1.5.3-.7.3-1.4.2-1.5-.1-.1-.3-.2-.5-.3z"/></svg>
     <span>WhatsApp</span>

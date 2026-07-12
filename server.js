@@ -29,6 +29,27 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '64kb' }));
+
+/* ============================================================
+ * Page rendering — the landing pages are templates: {{WHATSAPP}},
+ * {{EMAIL}}, {{PRICE_1..3}} are filled from the editable settings
+ * in the admin, so content changes apply instantly without a deploy.
+ * ============================================================ */
+
+function renderPage(file) {
+  const s = store.db.settings;
+  return fs
+    .readFileSync(path.join(__dirname, 'public', file), 'utf8')
+    .replaceAll('{{WHATSAPP}}', s.whatsapp)
+    .replaceAll('{{EMAIL}}', s.email)
+    .replaceAll('{{PRICE_1}}', s.price1)
+    .replaceAll('{{PRICE_2}}', s.price2)
+    .replaceAll('{{PRICE_3}}', s.price3);
+}
+
+app.get(['/', '/index.html'], (req, res) => res.type('html').send(renderPage('index.html')));
+app.get('/en.html', (req, res) => res.type('html').send(renderPage('en.html')));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* ============================================================
@@ -343,6 +364,13 @@ admin.delete('/campaigns/:id', (req, res) => {
   store.db.campaigns.splice(i, 1);
   store.persist();
   res.json({ ok: true });
+});
+
+// ---- site settings (editable website content) ----
+admin.get('/settings', (req, res) => res.json(store.db.settings));
+
+admin.patch('/settings', (req, res) => {
+  res.json(store.updateSettings(req.body || {}));
 });
 
 // ---- outbox (everything the automations drafted or sent) ----

@@ -102,6 +102,7 @@
     <button data-tab="payments">Payments</button>
     <button data-tab="campaigns">AI Campaigns</button>
     <button data-tab="outbox">Outbox</button>
+    <button data-tab="settings">Settings</button>
   </nav>
 </header>
 
@@ -452,6 +453,36 @@ function showMessageDialog(clientId, clientLabel) {
   });
 }
 
+/* ================= Settings (edit the website) ================= */
+
+async function renderSettings() {
+  const s = await api('/settings');
+  main.innerHTML = `
+    <h2>Website settings</h2>
+    <p style="color:var(--ink-soft);margin-bottom:1rem">These change your live website <strong>instantly</strong> — no deploy, no code. For bigger edits (texts, sections, design), edit the files on GitHub or ask Claude.</p>
+    <div class="panel">
+      <form class="grid" id="settings-form">
+        <label>WhatsApp number (country code + number, digits only)
+          <input name="whatsapp" value="${esc(s.whatsapp)}" placeholder="15551234567" pattern="[0-9]{8,15}" required>
+        </label>
+        <label>Contact email (shown in the footer)
+          <input name="email" type="email" value="${esc(s.email)}" required>
+        </label>
+        <label>Plan 1 price — Inicial / Starter ($/month)
+          <input name="price1" type="number" min="1" value="${s.price1}" required>
+        </label>
+        <label>Plan 2 price — Crecimiento / Growth ($/month)
+          <input name="price2" type="number" min="1" value="${s.price2}" required>
+        </label>
+        <label>Plan 3 price — Pro ($/month)
+          <input name="price3" type="number" min="1" value="${s.price3}" required>
+        </label>
+        <div><button class="btn btn-primary">Save — updates the live site</button></div>
+      </form>
+      <p class="small" style="color:var(--ink-muted);margin-top:0.8rem">Applies to both the Spanish and English pages. Tip: after changing prices, check the pricing section on your site to confirm it looks right.</p>
+    </div>`;
+}
+
 /* ================= Global delegated events ================= */
 
 main.addEventListener('change', async (e) => {
@@ -510,12 +541,13 @@ main.addEventListener('submit', async (e) => {
   try {
     if (e.target.id === 'client-form') { await api('/clients', { method: 'POST', body }); toast('Client added'); renderClients(); }
     if (e.target.id === 'payment-form') { await api('/payments', { method: 'POST', body }); toast('Payment recorded 💸'); renderPayments(); }
+    if (e.target.id === 'settings-form') { await api('/settings', { method: 'PATCH', body }); toast('Saved — your live site is updated ✨'); renderSettings(); }
   } catch (err) { alert(err.message); }
 });
 
 /* ================= Router ================= */
 
-const tabs = { dashboard: renderDashboard, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns, outbox: renderOutbox };
+const tabs = { dashboard: renderDashboard, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns, outbox: renderOutbox, settings: renderSettings };
 
 $('#nav').addEventListener('click', (e) => {
   const tab = e.target.dataset?.tab;

@@ -76,6 +76,16 @@ document.querySelectorAll('[data-plan]').forEach((btn) => {
   });
 });
 
+// Sofía hint bubble: appears after a moment, dismissible per session
+const fabHint = document.getElementById('fab-hint');
+if (fabHint && !sessionStorage.getItem('sofia-hint-dismissed')) {
+  setTimeout(() => { fabHint.hidden = false; }, 2200);
+  fabHint.querySelector('.fab-hint-close').addEventListener('click', () => {
+    fabHint.hidden = true;
+    sessionStorage.setItem('sofia-hint-dismissed', '1');
+  });
+}
+
 // Contact form submission
 const form = document.getElementById('contact-form');
 const status = form.querySelector('.form-status');

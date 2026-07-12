@@ -266,6 +266,10 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 .svc h3 { font-size: 17px; font-weight: 700; margin: 6px 0; }
 .svc p { font-size: 14px; color: var(--soft); }
 
+.svc-cta { grid-column: span 2; background: #fdf3e3; display: flex; flex-direction: column; justify-content: center; padding-left: 26px !important; }
+.svc-cta h3 { margin-top: 0; }
+.svc-cta a { font-weight: 800; }
+
 /* ---------- pricing table ---------- */
 
 .price-table {

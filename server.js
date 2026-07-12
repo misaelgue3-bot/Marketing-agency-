@@ -42,6 +42,7 @@ function renderPage(file) {
   return fs
     .readFileSync(path.join(__dirname, 'public', file), 'utf8')
     .replaceAll('{{WHATSAPP}}', s.whatsapp)
+    .replaceAll('{{TELEGRAM}}', s.telegram)
     .replaceAll('{{EMAIL}}', s.email)
     .replaceAll('{{PRICE_1}}', s.price1)
     .replaceAll('{{PRICE_2}}', s.price2)

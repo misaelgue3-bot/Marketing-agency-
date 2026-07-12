@@ -462,8 +462,11 @@ async function renderSettings() {
     <p style="color:var(--ink-soft);margin-bottom:1rem">These change your live website <strong>instantly</strong> — no deploy, no code. For bigger edits (texts, sections, design), edit the files on GitHub or ask Claude.</p>
     <div class="panel">
       <form class="grid" id="settings-form">
-        <label>WhatsApp number (country code + number, digits only)
-          <input name="whatsapp" value="${esc(s.whatsapp)}" placeholder="15551234567" pattern="[0-9]{8,15}" required>
+        <label>Telegram bot username (the "Chat with Sofía" button — no @)
+          <input name="telegram" value="${esc(s.telegram || '')}" placeholder="yourlocallift_bot" required>
+        </label>
+        <label>WhatsApp number (kept for future use — country code + digits)
+          <input name="whatsapp" value="${esc(s.whatsapp)}" placeholder="15551234567" pattern="[0-9]{8,15}">
         </label>
         <label>Contact email (shown in the footer)
           <input name="email" type="email" value="${esc(s.email)}" required>

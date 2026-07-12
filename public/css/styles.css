@@ -385,17 +385,17 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 .footer a:hover { color: var(--cream); }
 .footer-bottom { max-width: 1200px; margin: 20px auto 0; font-size: 12.5px; color: #6f8d88; }
 
-/* ---------- WhatsApp FAB ---------- */
+/* ---------- Telegram FAB (chat with Sofía) ---------- */
 
-.whatsapp-fab {
+.telegram-fab {
   position: fixed; right: 18px; bottom: 18px; z-index: 60;
   display: flex; align-items: center; gap: 8px;
-  background: #1fab52; color: #fff; font-weight: 700; font-size: 15px;
+  background: #26a5e4; color: #fff; font-weight: 700; font-size: 15px;
   padding: 12px 19px; border-radius: 999px;
-  box-shadow: 0 12px 30px rgba(18, 96, 47, 0.42);
+  box-shadow: 0 12px 30px rgba(16, 90, 128, 0.45);
   transition: transform 0.16s ease;
 }
-.whatsapp-fab:hover { transform: translateY(-3px) scale(1.03); color: #fff; }
+.telegram-fab:hover { transform: translateY(-3px) scale(1.03); color: #fff; }
 
 /* ---------- reveal-on-scroll ---------- */
 
@@ -406,7 +406,7 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
   html { scroll-behavior: auto; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .marquee-track { animation: none; }
-  .btn-gold, .whatsapp-fab { transition: none; }
+  .btn-gold, .telegram-fab { transition: none; }
 }
 
 /* ---------- responsive ---------- */
@@ -452,6 +452,6 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
   .svc, .svc:nth-child(3n + 1) { border-left: 0; padding-left: 0; }
   .photo-frame { height: 280px; }
   .photo-frame .tile { font-size: 48px; }
-  .whatsapp-fab span { display: none; }
-  .whatsapp-fab { padding: 13px; }
+  .telegram-fab span { display: none; }
+  .telegram-fab { padding: 13px; }
 }

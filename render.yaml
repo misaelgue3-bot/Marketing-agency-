@@ -1,0 +1,61 @@
+# Render blueprint — makes deployment one click:
+# https://render.com → New → Blueprint → pick this repository.
+#
+# After the first deploy, open the service → Environment and fill in the
+# values marked sync:false (Render prompts you for them). Only
+# ADMIN_PASSWORD is required to start; add AI/SMTP/Higgsfield keys anytime.
+#
+# NOTE on data: the free plan has an ephemeral disk, so data/db.json is
+# reset when the service redeploys or sleeps. Fine for trying it out.
+# For real use, either upgrade to the Starter plan and uncomment the disk
+# section below (leads/clients/payments then survive restarts), or make
+# sure SMTP is configured so every lead also reaches your email.
+
+services:
+  - type: web
+    name: locallift
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: AI_PROVIDER
+        value: ""
+      - key: HIGGSFIELD_API_KEY
+        sync: false
+      - key: HIGGSFIELD_API_SECRET
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: NOTIFY_EMAIL
+        value: misaelgue3@gmail.com
+      - key: AUTO_CAMPAIGNS
+        value: "false"
+      - key: AUTO_LEAD_REPLY
+        value: "false"
+      - key: AUTO_MONTHLY_CHECKINS
+        value: "false"
+      - key: AUTO_PAYMENT_REMINDERS
+        value: "false"
+      - key: WEEKLY_DIGEST
+        value: "false"
+    # Uncomment on the Starter plan for persistent data:
+    # disk:
+    #   name: locallift-data
+    #   mountPath: /opt/render/project/src/data
+    #   sizeGB: 1

@@ -93,14 +93,30 @@ period, even across restarts.
    revenue month over month.
 6. Turn on `AUTO_CAMPAIGNS=true` and step 4 happens by itself every month.
 
-## Deploying
+## Deploying (Render — recommended)
 
-Any host that runs Node.js works:
+This repo includes a `render.yaml` blueprint, so deployment is:
 
-- **Render / Railway / Fly.io** — connect this repo, start command
-  `npm start`, add your `.env` values in their dashboard.
-- **A VPS** — `git clone`, `npm install`, run with `pm2 start server.js`,
-  put nginx or Caddy in front for HTTPS.
+1. Go to [render.com](https://render.com) → sign up with your GitHub account.
+2. **New → Blueprint** → select this repository → Render reads `render.yaml`
+   and sets everything up.
+3. It prompts you for the secret values — at minimum set `ADMIN_PASSWORD`;
+   add AI / SMTP / Higgsfield keys now or later under **Environment**.
+4. Deploy. You get a live URL like `https://locallift.onrender.com`.
+
+**Connecting your own domain:** service → **Settings → Custom Domains →
+Add**. Render shows you the DNS records (an A record for `midominio.com`
+and a CNAME for `www`) — paste them in your domain registrar's DNS panel.
+HTTPS certificates are automatic. Propagation usually takes minutes,
+occasionally up to a day.
+
+**Data persistence:** the free plan resets `data/db.json` on redeploys and
+sleep. Fine for testing; for production either upgrade to Starter and
+uncomment the `disk` section in `render.yaml`, or configure SMTP so every
+lead also lands in your email.
+
+Any other Node.js host also works: Railway, Fly.io, or a VPS
+(`pm2 start server.js` behind nginx/Caddy for HTTPS).
 
 ## Customizing
 

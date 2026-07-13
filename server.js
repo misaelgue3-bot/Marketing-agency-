@@ -25,9 +25,103 @@ const agents = require('./lib/agents');
 const mailer = require('./lib/mailer');
 const automations = require('./lib/automations');
 const telegram = require('./lib/telegram');
+const stripePay = require('./lib/stripe');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+/* ============================================================
+ * Stripe webhook — registered before the JSON parser because
+ * signature verification needs the raw request body.
+ * ============================================================ */
+
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  if (!stripePay.webhookReady()) return res.status(503).send('STRIPE_WEBHOOK_SECRET is not configured');
+
+  const event = stripePay.verifyWebhook(req.body.toString('utf8'), req.headers['stripe-signature']);
+  if (!event) return res.status(400).send('Invalid signature');
+
+  try {
+    handleStripeEvent(event);
+  } catch (err) {
+    console.error('[stripe] webhook handler error:', err.message);
+  }
+  res.json({ received: true });
+});
+
+function findClientByStripe(customerId, email) {
+  return (
+    store.db.clients.find((c) => c.stripeCustomerId && c.stripeCustomerId === customerId) ||
+    (email ? store.db.clients.find((c) => c.email && c.email.toLowerCase() === String(email).toLowerCase()) : null)
+  );
+}
+
+function handleStripeEvent(event) {
+  const obj = event.data && event.data.object;
+  if (!obj) return;
+
+  // First payment: subscription activated from the checkout page
+  if (event.type === 'checkout.session.completed' && obj.mode === 'subscription') {
+    const md = obj.metadata || {};
+    const email = (obj.customer_details && obj.customer_details.email) || obj.customer_email || '';
+    const amount = (obj.amount_total || 0) / 100;
+
+    let client = findClientByStripe(obj.customer, email);
+    if (!client) {
+      client = store.addClient({
+        name: md.name || (obj.customer_details && obj.customer_details.name) || 'Cliente Stripe',
+        business: md.business || '',
+        email,
+        phone: md.phone || '',
+        plan: md.plan || 'Inicial',
+        monthlyFee: amount,
+        status: 'active',
+      });
+    } else {
+      store.updateClient(client.id, { plan: md.plan || client.plan, monthlyFee: amount, status: 'active' });
+    }
+    client.stripeCustomerId = obj.customer;
+
+    // The lead that filled the questionnaire is now a paying client
+    if (md.leadId) {
+      const lead = store.db.leads.find((l) => l.id === md.leadId);
+      if (lead) lead.status = 'converted';
+    }
+    store.persist();
+
+    store.addPayment({ clientId: client.id, amount, method: 'stripe', note: `Primer pago — plan ${client.plan} activado (Stripe)` });
+    const who = client.business || client.name;
+    telegram.notifyOwner(`🎉 ¡Pago recibido! ${who} activó el plan ${client.plan} — $${amount}/mes.\nYa aparece en /admin → Clients y Payments.`).catch(() => {});
+    if (mailer.available() && process.env.NOTIFY_EMAIL) {
+      mailer.send({
+        to: process.env.NOTIFY_EMAIL,
+        subject: `🎉 Pago recibido: ${who} — plan ${client.plan} ($${amount}/mes)`,
+        text: `${client.name} (${email}) activó el plan ${client.plan} por $${amount}/mes vía Stripe.\n\nYa está registrado como cliente activo y el pago quedó anotado.`,
+      }).catch((err) => console.error('[stripe] notify email failed:', err.message));
+    }
+    console.log(`[stripe] subscription started: ${who} — $${amount}/mes`);
+    return;
+  }
+
+  // Monthly renewals (the first invoice is covered by checkout.session.completed)
+  if (event.type === 'invoice.paid' && obj.billing_reason === 'subscription_cycle') {
+    const amount = (obj.amount_paid || 0) / 100;
+    const client = findClientByStripe(obj.customer, obj.customer_email);
+    if (!client) {
+      console.error(`[stripe] renewal for unknown customer ${obj.customer}`);
+      return;
+    }
+    store.addPayment({ clientId: client.id, amount, method: 'stripe', note: 'Renovación mensual (Stripe)' });
+    telegram.notifyOwner(`💵 Renovación cobrada: ${client.business || client.name} — $${amount}.`).catch(() => {});
+    return;
+  }
+
+  if (event.type === 'invoice.payment_failed') {
+    const client = findClientByStripe(obj.customer, obj.customer_email);
+    const who = client ? client.business || client.name : obj.customer_email || obj.customer;
+    telegram.notifyOwner(`⚠️ Pago fallido de ${who}. Stripe reintentará automáticamente — avísale a tu cliente por si cambió de tarjeta.`).catch(() => {});
+  }
+}
 
 app.use(express.json({ limit: '64kb' }));
 
@@ -46,7 +140,8 @@ function renderPage(file) {
     .replaceAll('{{EMAIL}}', s.email)
     .replaceAll('{{PRICE_1}}', s.price1)
     .replaceAll('{{PRICE_2}}', s.price2)
-    .replaceAll('{{PRICE_3}}', s.price3);
+    .replaceAll('{{PRICE_3}}', s.price3)
+    .replaceAll('{{STRIPE_ON}}', stripePay.available() ? '1' : '0');
 }
 
 app.get(['/', '/index.html'], (req, res) => res.type('html').send(renderPage('index.html')));
@@ -211,7 +306,61 @@ app.post('/api/checkout', (req, res) => {
     .notifyOwner(`🛒 ¡Solicitud de plan ${lead.plan}!\n${lead.business} — ${lead.name} (${lead.phone || lead.email})\nRespuestas completas en /admin → Leads.`)
     .catch(() => {});
   automations.replyToLead(lead, (m) => console.log(`[auto-reply] ${m}`)).catch(() => {});
-  res.json({ ok: true });
+  res.json({ ok: true, leadId: lead.id });
+});
+
+/* ============================================================
+ * Stripe payment — opens a hosted checkout for a monthly plan.
+ * Amounts always come from the server's Settings, never the client.
+ * ============================================================ */
+
+app.post('/api/pay', async (req, res) => {
+  if (!stripePay.available()) {
+    return res.status(503).json({ error: 'Los pagos en línea aún no están activados. / Online payments are not enabled yet.' });
+  }
+
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+  if (rateLimited(String(ip))) {
+    return res.status(429).json({ error: 'Too many attempts. Please try again later.' });
+  }
+
+  const b = req.body || {};
+  const s = store.db.settings;
+  const PLAN_AMOUNTS = {
+    Inicial: s.price1, Starter: s.price1,
+    Crecimiento: s.price2, Growth: s.price2,
+    Pro: s.price3,
+  };
+  const plan = String(b.plan || '');
+  const amount = PLAN_AMOUNTS[plan];
+  if (!amount) return res.status(400).json({ error: 'Unknown plan' });
+
+  const clean = (v, max) => String(v || '').trim().slice(0, max);
+  const base = (process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
+  const page = b.lang === 'en' ? 'checkout-en.html' : 'checkout.html';
+
+  try {
+    const session = await stripePay.createSubscriptionCheckout({
+      plan,
+      amountUsd: amount,
+      customerEmail: EMAIL_RE.test(String(b.email || '')) ? clean(b.email, 150) : undefined,
+      metadata: {
+        plan,
+        name: clean(b.name, 100),
+        business: clean(b.business, 120),
+        phone: clean(b.phone, 40),
+        leadId: clean(b.leadId, 40),
+      },
+      successUrl: `${base}/${page}?paid=1&plan=${encodeURIComponent(plan)}`,
+      cancelUrl: `${base}/${page}?plan=${encodeURIComponent(plan)}&cancelled=1`,
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('[stripe] checkout session failed:', err.message);
+    res.status(502).json({
+      error: 'No pudimos abrir el pago en este momento. Intenta de nuevo en un minuto. / We could not open the payment right now. Please try again in a minute.',
+    });
+  }
 });
 
 /* ============================================================

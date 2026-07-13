@@ -598,6 +598,11 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 .co-done-actions { display: grid; gap: 16px; justify-items: center; }
 .co-home { font-weight: 700; color: var(--teal); }
 
+.co-pay { margin: 0 auto 30px; max-width: 460px; display: grid; gap: 10px; justify-items: center; }
+.co-pay .btn-submit { width: 100%; }
+.co-done .co-pay-note { font-size: 13px; margin: 0; max-width: 34em; }
+.co-done #co-pay-status { margin: 0; }
+
 /* ---------- Sofía hint bubble ---------- */
 
 .fab-hint {

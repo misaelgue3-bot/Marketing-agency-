@@ -159,7 +159,12 @@
     <section id="co-done" class="co-done" hidden>
       <div class="co-check" aria-hidden="true">✓</div>
       <h1 class="h-serif">Done! Your request is <em>on its way.</em></h1>
-      <p>We got your answers for the <strong id="co-done-plan">Growth</strong> plan. Within 24 hours we'll reach out with your custom plan, in writing. <strong>You pay nothing until you approve it.</strong></p>
+      <p id="co-done-text">We got your answers for the <strong id="co-done-plan">Growth</strong> plan. Within 24 hours we'll reach out with your custom plan, in writing. <strong>You pay nothing until you approve it.</strong></p>
+      <div class="co-pay" id="co-pay" hidden>
+        <button type="button" id="co-pay-btn" class="btn-submit">💳 Activate my plan now — $<span id="co-pay-amt">399</span>/mo</button>
+        <p class="co-pay-note">Secure payment with <strong>Stripe</strong>. Renews monthly, cancel anytime. Prefer to wait for your written plan first? That's perfectly fine too.</p>
+        <p class="form-status" id="co-pay-status" role="status" aria-live="polite"></p>
+      </div>
       <div class="co-done-actions">
         <a class="btn-gold" href="/sofia-app.html">💬 Questions? Chat with Sofía</a>
         <a class="co-home" href="/en.html">← Back to home</a>
@@ -167,7 +172,7 @@
     </section>
   </main>
 
-  <script>window.CO_PRICES = { p1: {{PRICE_1}}, p2: {{PRICE_2}}, p3: {{PRICE_3}} };</script>
+  <script>window.CO_PRICES = { p1: {{PRICE_1}}, p2: {{PRICE_2}}, p3: {{PRICE_3}} }; window.CO_STRIPE = '{{STRIPE_ON}}' === '1';</script>
   <script src="/js/checkout.js"></script>
 </body>
 </html>

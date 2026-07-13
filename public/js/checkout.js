@@ -47,6 +47,10 @@ const t = es
       sending: 'Enviando…',
       errGeneric: 'Algo salió mal. Intenta de nuevo o escríbenos directamente.',
       errNetwork: 'No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.',
+      opening: 'Abriendo el pago seguro…',
+      paidTitle: '¡Pago recibido! Tu plan está activo. 🎉',
+      paidText: (plan) => `Bienvenido a Your LocalLift. Tu plan ${plan} ya está activo y hoy mismo nos ponemos a trabajar — te contactamos en las próximas horas para arrancar.`,
+      cancelled: 'El pago se canceló — no se cobró nada. Puedes intentarlo de nuevo cuando quieras.',
     }
   : {
       per: '/mo',
@@ -61,6 +65,10 @@ const t = es
       sending: 'Sending…',
       errGeneric: 'Something went wrong. Please try again or email us directly.',
       errNetwork: 'Could not reach the server. Please check your connection and try again.',
+      opening: 'Opening secure payment…',
+      paidTitle: 'Payment received! Your plan is active. 🎉',
+      paidText: (plan) => `Welcome to Your LocalLift. Your ${plan} plan is now active and we get to work today — we'll reach out within hours to kick things off.`,
+      cancelled: 'The payment was cancelled — nothing was charged. You can try again anytime.',
     };
 
 const form = document.getElementById('co-form');
@@ -167,12 +175,9 @@ form.addEventListener('submit', async (e) => {
     });
     const body = await res.json().catch(() => ({}));
     if (res.ok && body.ok) {
-      document.getElementById('co-intro').hidden = true;
-      document.getElementById('co-plan-card').hidden = true;
-      form.hidden = true;
-      document.getElementById('co-done-plan').textContent = plan;
-      document.getElementById('co-done').hidden = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      leadId = body.leadId || '';
+      contact = { name: data.name, email: data.email, phone: data.phone, business: data.business };
+      showDone();
     } else {
       showError(body.error || t.errGeneric);
     }
@@ -183,3 +188,63 @@ form.addEventListener('submit', async (e) => {
     submitBtn.textContent = label;
   }
 });
+
+// ---- payment (Stripe) ----
+let leadId = '';
+let contact = {};
+const payBox = document.getElementById('co-pay');
+const payBtn = document.getElementById('co-pay-btn');
+const payStatus = document.getElementById('co-pay-status');
+
+function showDone() {
+  document.getElementById('co-intro').hidden = true;
+  document.getElementById('co-plan-card').hidden = true;
+  form.hidden = true;
+  document.getElementById('co-done-plan').textContent = plan;
+  if (window.CO_STRIPE && payBox) {
+    document.getElementById('co-pay-amt').textContent = PLANS[plan].price;
+    payBox.hidden = false;
+  }
+  document.getElementById('co-done').hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+if (payBtn) {
+  payBtn.addEventListener('click', async () => {
+    payBtn.disabled = true;
+    payStatus.textContent = t.opening;
+    payStatus.className = 'form-status';
+    try {
+      const res = await fetch('/api/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, lang: es ? 'es' : 'en', leadId, ...contact }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body.url) {
+        location.href = body.url; // Stripe's hosted checkout page
+        return;
+      }
+      payStatus.textContent = body.error || t.errGeneric;
+      payStatus.classList.add('err');
+    } catch {
+      payStatus.textContent = t.errNetwork;
+      payStatus.classList.add('err');
+    }
+    payBtn.disabled = false;
+  });
+}
+
+// ---- returning from Stripe ----
+const query = new URLSearchParams(location.search);
+if (query.get('paid') === '1') {
+  document.getElementById('co-intro').hidden = true;
+  document.getElementById('co-plan-card').hidden = true;
+  form.hidden = true;
+  const done = document.getElementById('co-done');
+  done.querySelector('h1').textContent = t.paidTitle;
+  document.getElementById('co-done-text').textContent = t.paidText(plan);
+  done.hidden = false;
+} else if (query.get('cancelled') === '1') {
+  showError(t.cancelled);
+}

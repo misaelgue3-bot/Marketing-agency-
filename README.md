@@ -57,6 +57,8 @@ For auto-restart while developing: `npm run dev`
 | `HIGGSFIELD_API_KEY` / `HIGGSFIELD_API_SECRET` | Lets Valen generate real ad images (get keys at cloud.higgsfield.ai). Optional. |
 | `AUTO_CAMPAIGNS` | `true` = every active client gets a monthly campaign generated automatically. |
 | `SMTP_*` + `NOTIFY_EMAIL` | Email you every new lead. Works with Gmail App Passwords or any SMTP provider. |
+| `STRIPE_SECRET_KEY` | Turns on online payments: the checkout page shows an "activate my plan" button and clients subscribe monthly via Stripe's hosted checkout. |
+| `STRIPE_WEBHOOK_SECRET` | Lets Stripe report payments back: first payments auto-create the active client, renewals auto-record in Payments, failures alert you on Telegram. |
 | `TELEGRAM_BOT_TOKEN` | Sofía answers a Telegram bot live, 24/7 (create one via @BotFather). New chatters become leads automatically. |
 | `TELEGRAM_OWNER_CHAT_ID` | Optional: your Telegram chat id (send `/id` to your bot) for instant lead alerts. |
 | `PUBLIC_URL` | Optional: the site's public URL, used for the Sofía Mini App button in the bot. On Render this is detected automatically (`RENDER_EXTERNAL_URL`). |
@@ -82,6 +84,27 @@ It works for **everyone**, with or without Telegram:
 Also set it as the bot's **menu button**: @BotFather → `/mybots` → your
 bot → Bot Settings → Menu Button → set the URL to
 `https://yourlocallift.com/sofia-app.html` and name it "Sofía".
+
+### Stripe payments (monthly subscriptions)
+
+Plan buttons lead to `/checkout.html`, a 3-step questionnaire that files a
+high-intent lead. With Stripe configured, the success screen also offers
+**"Activar mi plan ahora"** — a Stripe-hosted subscription checkout using
+the live prices from admin Settings (no products to configure in Stripe).
+
+Setup:
+1. [stripe.com](https://stripe.com) → create an account → **Developers →
+   API keys** → copy the *Secret key* into `STRIPE_SECRET_KEY`
+   (use `sk_test_...` first to practice with card `4242 4242 4242 4242`).
+2. **Developers → Webhooks → Add endpoint** →
+   `https://yourlocallift.com/api/stripe/webhook`, events
+   `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`
+   → copy the *Signing secret* into `STRIPE_WEBHOOK_SECRET`.
+
+What happens automatically on payment: the payer becomes an **active
+client** with the right plan and fee, the payment is recorded, monthly
+renewals keep recording themselves, failed charges ping you on Telegram,
+and the questionnaire lead is marked converted.
 
 Leads, clients, payments and campaigns are stored in `data/db.json` —
 simple JSON, easy to back up. On hosts with ephemeral disks (some free

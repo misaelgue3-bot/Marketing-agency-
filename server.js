@@ -52,6 +52,8 @@ function renderPage(file) {
 app.get(['/', '/index.html'], (req, res) => res.type('html').send(renderPage('index.html')));
 app.get('/en.html', (req, res) => res.type('html').send(renderPage('en.html')));
 app.get('/sofia-app.html', (req, res) => res.type('html').send(renderPage('sofia-app.html')));
+app.get('/checkout.html', (req, res) => res.type('html').send(renderPage('checkout.html')));
+app.get('/checkout-en.html', (req, res) => res.type('html').send(renderPage('checkout-en.html')));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -141,6 +143,73 @@ app.post('/api/contact', (req, res) => {
 
   sendNotification(lead);
   // Sofía answers the lead automatically when AUTO_LEAD_REPLY=true
+  automations.replyToLead(lead, (m) => console.log(`[auto-reply] ${m}`)).catch(() => {});
+  res.json({ ok: true });
+});
+
+/* ============================================================
+ * Checkout / onboarding — plan buttons lead here. Collects the
+ * business questionnaire and files it as a high-intent lead.
+ * ============================================================ */
+
+app.post('/api/checkout', (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+  if (rateLimited(String(ip))) {
+    return res.status(429).json({ ok: false, error: 'Too many submissions. Please try again later.' });
+  }
+
+  const b = req.body || {};
+
+  // Honeypot: hidden field humans never fill
+  if (b.website) return res.json({ ok: true });
+
+  const errors = [];
+  if (!b.business || String(b.business).trim().length < 2) errors.push('Please enter your business name.');
+  if (!b.name || String(b.name).trim().length < 2) errors.push('Please enter your name.');
+  if (!b.email || !EMAIL_RE.test(String(b.email))) errors.push('Please enter a valid email address.');
+  if (errors.length) return res.status(400).json({ ok: false, error: errors.join(' ') });
+
+  const clean = (v, max) => String(v || '').trim().slice(0, max);
+  const row = (label, v, max = 200) => (v ? `${label}: ${clean(v, max)}\n` : '');
+  const message =
+    '📋 Solicitud de plan (checkout)\n\n' +
+    row('Tipo de negocio', b.type) +
+    row('Ciudad/zona', b.city) +
+    row('Tiempo con el negocio', b.years) +
+    row('Página web', b.hasWebsite) +
+    row('Google Business', b.hasGoogle) +
+    row('Redes sociales', b.social) +
+    row('Logo y marca', b.hasBrand) +
+    row('Meta principal', b.goal) +
+    row('Contacto preferido', b.contactPref) +
+    row('Idioma', b.langPref) +
+    row('Notas', b.notes, 1000);
+
+  const lead = {
+    id: crypto.randomUUID(),
+    name: clean(b.name, 100),
+    email: clean(b.email, 150),
+    phone: clean(b.phone, 40),
+    business: clean(b.business, 120),
+    plan: clean(b.plan, 40),
+    budget: '',
+    message: message.trim(),
+    status: 'new',
+    source: 'checkout',
+    receivedAt: new Date().toISOString(),
+  };
+
+  try {
+    store.addLead(lead);
+  } catch (err) {
+    console.error('Failed to save checkout lead:', err);
+    return res.status(500).json({ ok: false, error: 'Something went wrong. Please email us directly.' });
+  }
+
+  sendNotification(lead);
+  telegram
+    .notifyOwner(`🛒 ¡Solicitud de plan ${lead.plan}!\n${lead.business} — ${lead.name} (${lead.phone || lead.email})\nRespuestas completas en /admin → Leads.`)
+    .catch(() => {});
   automations.replyToLead(lead, (m) => console.log(`[auto-reply] ${m}`)).catch(() => {});
   res.json({ ok: true });
 });

@@ -12,7 +12,6 @@ const t = es
       errName: 'Por favor escribe tu nombre.',
       errEmail: 'Por favor escribe un correo electrónico válido.',
       errMessage: 'Cuéntanos un poco sobre tu negocio, por favor.',
-      planPrefill: (plan) => `¡Hola! Me interesa el plan ${plan}. Mi negocio es...`,
     }
   : {
       sending: 'Sending...',
@@ -23,7 +22,6 @@ const t = es
       errName: 'Please enter your name.',
       errEmail: 'Please enter a valid email address.',
       errMessage: 'Please tell us a bit about your business.',
-      planPrefill: (plan) => `Hi! I'm interested in the ${plan} plan. My business is...`,
     };
 
 // Footer year
@@ -63,18 +61,6 @@ if ('IntersectionObserver' in window) {
 } else {
   revealEls.forEach((el) => el.classList.add('in'));
 }
-
-// Pricing buttons pre-select the plan in the contact form
-document.querySelectorAll('[data-plan]').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const planSelect = document.getElementById('plan-select');
-    if (planSelect) planSelect.value = btn.dataset.plan;
-    const message = document.querySelector('#contact-form [name="message"]');
-    if (message && !message.value.trim()) {
-      message.value = t.planPrefill(btn.dataset.plan);
-    }
-  });
-});
 
 // Sofía hint bubble: appears after a moment, dismissible per session
 const fabHint = document.getElementById('fab-hint');

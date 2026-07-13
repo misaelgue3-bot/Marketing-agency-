@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Get started — Your LocalLift</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="co-page">
+  <header class="co-head">
+    <a href="/en.html" class="logo">YOUR LOCAL<span>LIFT</span></a>
+    <a href="/checkout.html" class="co-lang" id="co-lang-link" title="Versión en español">ES</a>
+  </header>
+
+  <main class="co-wrap">
+    <div id="co-intro">
+      <h1 class="h-serif co-title">Tell us about your business, <em>and we're off.</em></h1>
+      <p class="co-sub">3 steps, 2 minutes. Your answers help us build your custom plan — <strong>you pay nothing today</strong>: first you get the plan in writing, then you decide.</p>
+    </div>
+
+    <div class="co-plan" id="co-plan-card">
+      <div class="co-plan-head">
+        <div>
+          <div class="plan-label" id="co-plan-name">Growth</div>
+          <div class="plan-price" id="co-plan-price">$399<small>/mo</small></div>
+        </div>
+        <label class="co-plan-switch">Change plan
+          <select id="co-plan-select">
+            <option value="Starter">Starter — ${{PRICE_1}}/mo</option>
+            <option value="Growth">Growth — ${{PRICE_2}}/mo</option>
+            <option value="Pro">Pro — ${{PRICE_3}}/mo</option>
+          </select>
+        </label>
+      </div>
+      <ul class="plan-features co-plan-feats" id="co-plan-feats"></ul>
+    </div>
+
+    <form id="co-form" class="contact-form co-form" novalidate>
+      <div class="co-progress">
+        <span id="co-step-label">Step 1 of 3 — Your business</span>
+        <div class="co-bar" aria-hidden="true"><i id="co-bar-fill" style="width:33%"></i></div>
+      </div>
+
+      <fieldset class="co-step" data-step="1">
+        <label>Your business name *
+          <input name="business" maxlength="120" placeholder="E.g. Tacos El Güero" autocomplete="organization">
+        </label>
+        <label>What kind of business is it? *
+          <select name="type">
+            <option value="">Choose one</option>
+            <option>Restaurant / food</option>
+            <option>Bakery / pastry</option>
+            <option>Auto repair shop</option>
+            <option>Beauty salon / barbershop</option>
+            <option>Cleaning</option>
+            <option>Landscaping / gardening</option>
+            <option>Construction / remodeling</option>
+            <option>Store / groceries</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>City or area where your customers are *
+          <input name="city" maxlength="80" placeholder="E.g. Houston, TX">
+        </label>
+        <label>How long have you had the business?
+          <select name="years">
+            <option>Just starting out</option>
+            <option selected>1 to 3 years</option>
+            <option>3 to 10 years</option>
+            <option>More than 10 years</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset class="co-step" data-step="2" hidden>
+        <label>Do you have a website?
+          <select name="hasWebsite">
+            <option>No</option>
+            <option>Yes, but it needs work</option>
+            <option>Yes, and it works well</option>
+          </select>
+        </label>
+        <label>Do you have a Google Business profile?
+          <select name="hasGoogle">
+            <option>No</option>
+            <option>Yes</option>
+            <option>Not sure</option>
+          </select>
+        </label>
+        <label>Your social media (if any)
+          <input name="social" maxlength="200" placeholder="E.g. @tacoselguero on Instagram and Facebook">
+        </label>
+        <label>Do you have a logo and brand?
+          <select name="hasBrand">
+            <option>No, I need one from scratch</option>
+            <option>I have a logo, but want to improve it</option>
+            <option>Yes, full brand</option>
+          </select>
+        </label>
+        <label>What's your main goal? *
+          <select name="goal">
+            <option value="">Choose one</option>
+            <option>More calls and messages</option>
+            <option>More customers at my location</option>
+            <option>Sell online</option>
+            <option>Get a new business known</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset class="co-step" data-step="3" hidden>
+        <div class="form-row">
+          <label>Your name *
+            <input name="name" maxlength="100" autocomplete="name">
+          </label>
+          <label>Phone / WhatsApp *
+            <input name="phone" maxlength="40" type="tel" autocomplete="tel" placeholder="E.g. 832 555 0123">
+          </label>
+        </div>
+        <label>Email *
+          <input name="email" maxlength="150" type="email" autocomplete="email">
+        </label>
+        <div class="form-row">
+          <label>How should we contact you?
+            <select name="contactPref">
+              <option>WhatsApp</option>
+              <option>Phone call</option>
+              <option>Email</option>
+            </select>
+          </label>
+          <label>In which language?
+            <select name="langPref">
+              <option>English</option>
+              <option>Español</option>
+              <option>Both</option>
+            </select>
+          </label>
+        </div>
+        <label>Anything else we should know?
+          <textarea name="notes" rows="3" maxlength="1000" placeholder="Hours, competitors, ideas — anything you want"></textarea>
+        </label>
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      </fieldset>
+
+      <p class="form-status" role="status" aria-live="polite"></p>
+
+      <div class="co-btns">
+        <button type="button" id="co-back" class="co-back" hidden>← Back</button>
+        <button type="button" id="co-next" class="btn-submit">Next →</button>
+        <button type="submit" id="co-submit" class="btn-submit" hidden>Send my request ✓</button>
+      </div>
+    </form>
+
+    <section id="co-done" class="co-done" hidden>
+      <div class="co-check" aria-hidden="true">✓</div>
+      <h1 class="h-serif">Done! Your request is <em>on its way.</em></h1>
+      <p>We got your answers for the <strong id="co-done-plan">Growth</strong> plan. Within 24 hours we'll reach out with your custom plan, in writing. <strong>You pay nothing until you approve it.</strong></p>
+      <div class="co-done-actions">
+        <a class="btn-gold" href="/sofia-app.html">💬 Questions? Chat with Sofía</a>
+        <a class="co-home" href="/en.html">← Back to home</a>
+      </div>
+    </section>
+  </main>
+
+  <script>window.CO_PRICES = { p1: {{PRICE_1}}, p2: {{PRICE_2}}, p3: {{PRICE_3}} };</script>
+  <script src="/js/checkout.js"></script>
+</body>
+</html>

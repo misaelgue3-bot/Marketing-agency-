@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Empieza hoy — Your LocalLift</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="co-page">
+  <header class="co-head">
+    <a href="/" class="logo">YOUR LOCAL<span>LIFT</span></a>
+    <a href="/checkout-en.html" class="co-lang" id="co-lang-link" title="English version">EN</a>
+  </header>
+
+  <main class="co-wrap">
+    <div id="co-intro">
+      <h1 class="h-serif co-title">Cuéntanos de tu negocio, <em>y arrancamos.</em></h1>
+      <p class="co-sub">3 pasos, 2 minutos. Con tus respuestas preparamos tu plan a la medida — <strong>no pagas nada hoy</strong>: primero recibes el plan por escrito y tú decides.</p>
+    </div>
+
+    <div class="co-plan" id="co-plan-card">
+      <div class="co-plan-head">
+        <div>
+          <div class="plan-label" id="co-plan-name">Crecimiento</div>
+          <div class="plan-price" id="co-plan-price">$399<small>/mes</small></div>
+        </div>
+        <label class="co-plan-switch">Cambiar plan
+          <select id="co-plan-select">
+            <option value="Inicial">Inicial — ${{PRICE_1}}/mes</option>
+            <option value="Crecimiento">Crecimiento — ${{PRICE_2}}/mes</option>
+            <option value="Pro">Pro — ${{PRICE_3}}/mes</option>
+          </select>
+        </label>
+      </div>
+      <ul class="plan-features co-plan-feats" id="co-plan-feats"></ul>
+    </div>
+
+    <form id="co-form" class="contact-form co-form" novalidate>
+      <div class="co-progress">
+        <span id="co-step-label">Paso 1 de 3 — Tu negocio</span>
+        <div class="co-bar" aria-hidden="true"><i id="co-bar-fill" style="width:33%"></i></div>
+      </div>
+
+      <fieldset class="co-step" data-step="1">
+        <label>Nombre de tu negocio *
+          <input name="business" maxlength="120" placeholder="Ej. Tacos El Güero" autocomplete="organization">
+        </label>
+        <label>¿Qué tipo de negocio es? *
+          <select name="type">
+            <option value="">Elige una opción</option>
+            <option>Restaurante / comida</option>
+            <option>Panadería / repostería</option>
+            <option>Taller mecánico</option>
+            <option>Salón de belleza / barbería</option>
+            <option>Limpieza</option>
+            <option>Jardinería / paisajismo</option>
+            <option>Construcción / remodelación</option>
+            <option>Tienda / abarrotes</option>
+            <option>Otro</option>
+          </select>
+        </label>
+        <label>Ciudad o zona donde están tus clientes *
+          <input name="city" maxlength="80" placeholder="Ej. Houston, TX">
+        </label>
+        <label>¿Cuánto tiempo llevas con el negocio?
+          <select name="years">
+            <option>Apenas voy a empezar</option>
+            <option selected>1 a 3 años</option>
+            <option>3 a 10 años</option>
+            <option>Más de 10 años</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset class="co-step" data-step="2" hidden>
+        <label>¿Tienes página web?
+          <select name="hasWebsite">
+            <option>No tengo</option>
+            <option>Sí, pero necesita mejorar</option>
+            <option>Sí, y funciona bien</option>
+          </select>
+        </label>
+        <label>¿Tienes perfil de Google (Google Business)?
+          <select name="hasGoogle">
+            <option>No</option>
+            <option>Sí</option>
+            <option>No estoy seguro</option>
+          </select>
+        </label>
+        <label>Tus redes sociales (si tienes)
+          <input name="social" maxlength="200" placeholder="Ej. @tacoselguero en Instagram y Facebook">
+        </label>
+        <label>¿Tienes logo y marca?
+          <select name="hasBrand">
+            <option>No, necesito una desde cero</option>
+            <option>Tengo logo, pero quiero mejorarlo</option>
+            <option>Sí, tengo marca completa</option>
+          </select>
+        </label>
+        <label>¿Cuál es tu meta principal? *
+          <select name="goal">
+            <option value="">Elige una opción</option>
+            <option>Más llamadas y mensajes</option>
+            <option>Más clientes en mi local</option>
+            <option>Vender por internet</option>
+            <option>Dar a conocer un negocio nuevo</option>
+            <option>Otra</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset class="co-step" data-step="3" hidden>
+        <div class="form-row">
+          <label>Tu nombre *
+            <input name="name" maxlength="100" autocomplete="name">
+          </label>
+          <label>Teléfono / WhatsApp *
+            <input name="phone" maxlength="40" type="tel" autocomplete="tel" placeholder="Ej. 832 555 0123">
+          </label>
+        </div>
+        <label>Correo electrónico *
+          <input name="email" maxlength="150" type="email" autocomplete="email">
+        </label>
+        <div class="form-row">
+          <label>¿Cómo prefieres que te contactemos?
+            <select name="contactPref">
+              <option>WhatsApp</option>
+              <option>Llamada</option>
+              <option>Correo</option>
+            </select>
+          </label>
+          <label>¿En qué idioma?
+            <select name="langPref">
+              <option>Español</option>
+              <option>English</option>
+              <option>Los dos</option>
+            </select>
+          </label>
+        </div>
+        <label>¿Algo más que debamos saber?
+          <textarea name="notes" rows="3" maxlength="1000" placeholder="Horarios, competencia, ideas — lo que quieras"></textarea>
+        </label>
+        <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      </fieldset>
+
+      <p class="form-status" role="status" aria-live="polite"></p>
+
+      <div class="co-btns">
+        <button type="button" id="co-back" class="co-back" hidden>← Atrás</button>
+        <button type="button" id="co-next" class="btn-submit">Siguiente →</button>
+        <button type="submit" id="co-submit" class="btn-submit" hidden>Enviar mi solicitud ✓</button>
+      </div>
+    </form>
+
+    <section id="co-done" class="co-done" hidden>
+      <div class="co-check" aria-hidden="true">✓</div>
+      <h1 class="h-serif">¡Listo! Tu solicitud <em>va en camino.</em></h1>
+      <p>Recibimos tus respuestas para el plan <strong id="co-done-plan">Crecimiento</strong>. En menos de 24 horas te contactamos con tu plan a la medida, por escrito. <strong>No pagas nada hasta que lo apruebes.</strong></p>
+      <div class="co-done-actions">
+        <a class="btn-gold" href="/sofia-app.html">💬 ¿Preguntas? Chatea con Sofía</a>
+        <a class="co-home" href="/">← Volver al inicio</a>
+      </div>
+    </section>
+  </main>
+
+  <script>window.CO_PRICES = { p1: {{PRICE_1}}, p2: {{PRICE_2}}, p3: {{PRICE_3}} };</script>
+  <script src="/js/checkout.js"></script>
+</body>
+</html>

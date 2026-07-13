@@ -537,6 +537,67 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 .chat-now a { color: var(--gold); font-weight: 800; text-decoration: underline; }
 .chat-now a:hover { color: var(--gold-2); }
 
+/* ---------- checkout / onboarding ---------- */
+
+[hidden] { display: none !important; }
+
+.co-page { background: var(--cream); }
+.co-head {
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 28px;
+  font-family: var(--font-display);
+}
+.co-head .logo { font-weight: 800; font-size: 22px; color: var(--cream); letter-spacing: -0.01em; }
+.co-head .logo span { color: var(--gold); }
+.co-lang { color: #9fb9b4; font-weight: 700; font-size: 14px; }
+.co-lang:hover { color: var(--gold); }
+
+.co-wrap { max-width: 700px; margin: 0 auto; padding: 40px 20px 80px; }
+.co-title { font-size: clamp(30px, 5vw, 42px); margin-bottom: 10px; }
+.co-sub { color: var(--soft); font-size: 15.5px; margin-bottom: 28px; max-width: 40em; }
+
+.co-plan {
+  background: #fff; border: 2px solid var(--ink); border-radius: 18px;
+  padding: 22px 24px; margin-bottom: 22px;
+  box-shadow: 6px 6px 0 rgba(29, 44, 48, 0.15);
+}
+.co-plan-head { display: flex; align-items: start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.co-plan .plan-price { font-size: 40px; margin: 4px 0 10px; }
+.co-plan-switch { display: grid; gap: 5px; font-size: 12.5px; font-weight: 700; color: var(--soft); }
+.co-plan-switch select {
+  font: inherit; font-size: 14px; padding: 9px 12px;
+  border: 2px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink);
+}
+.co-plan-feats { margin: 0; }
+
+.co-form { box-shadow: 10px 10px 0 var(--ink); }
+.co-step { border: 0; padding: 0; margin: 0; display: grid; gap: 15px; }
+.co-progress { display: grid; gap: 8px; margin-bottom: 4px; }
+.co-progress span { font-weight: 800; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--terra); }
+.co-bar { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.co-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--terra), var(--gold)); border-radius: 999px; transition: width 0.3s ease; }
+
+.co-btns { display: flex; gap: 12px; align-items: center; }
+.co-btns .btn-submit { flex: 1; width: auto; }
+.co-back {
+  background: none; border: 2px solid var(--ink); color: var(--ink);
+  border-radius: 14px; padding: 14px 20px; font-family: var(--font-display);
+  font-weight: 800; font-size: 15px; cursor: pointer;
+}
+.co-back:hover { background: var(--ink); color: var(--cream); }
+
+.co-done { text-align: center; padding: 40px 10px; }
+.co-check {
+  width: 84px; height: 84px; margin: 0 auto 22px; border-radius: 50%;
+  background: var(--teal); color: #fff; font-size: 42px; font-weight: 800;
+  display: grid; place-items: center; box-shadow: 5px 5px 0 var(--ink);
+}
+.co-done h1 { font-size: clamp(30px, 5vw, 42px); margin-bottom: 14px; }
+.co-done p { color: var(--soft); font-size: 15.5px; max-width: 34em; margin: 0 auto 28px; }
+.co-done-actions { display: grid; gap: 16px; justify-items: center; }
+.co-home { font-weight: 700; color: var(--teal); }
+
 /* ---------- Sofía hint bubble ---------- */
 
 .fab-hint {

@@ -398,7 +398,8 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 .live-body .brand-scope { margin-top: auto; }
 .live-shot--spec { background: #111; }
 .spec-name {
-  font-family: "Anton", sans-serif; font-size: 38px; color: #fff; text-transform: uppercase;
+  font-family: "Anton", "Impact", "Arial Narrow", sans-serif;
+  font-size: 38px; color: #fff; text-transform: uppercase; letter-spacing: 0.01em;
   position: relative; text-shadow: 0 0 14px rgba(255, 255, 255, 0.85), 0 0 34px rgba(255, 255, 255, 0.45);
 }
 .spec-dot { position: absolute; border-radius: 50%; animation: ll-float 5s ease-in-out infinite; }

@@ -379,7 +379,7 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
   color: inherit;
 }
 .live-shot { position: relative; padding: 22px 24px; display: grid; place-items: center; min-height: 194px; overflow: hidden; }
-.live-shot img { width: 150px; height: 150px; object-fit: contain; }
+.live-shot img { max-width: 260px; max-height: 150px; width: auto; height: auto; object-fit: contain; }
 .live-shot.img-missing::before {
   content: "CULICHI TOWN"; font-family: var(--font-display); font-weight: 800;
   font-size: 30px; color: #fff; letter-spacing: 0.02em;

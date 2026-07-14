@@ -247,6 +247,57 @@ app.post('/api/contact', (req, res) => {
 });
 
 /* ============================================================
+ * Quick brief — the 3-tap wizard on the landing page.
+ * One contact field (phone or email), so no email requirement.
+ * ============================================================ */
+
+app.post('/api/brief', (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+  if (rateLimited(String(ip))) {
+    return res.status(429).json({ ok: false, error: 'Too many submissions. Please try again later.' });
+  }
+
+  const b = req.body || {};
+  if (b.website) return res.json({ ok: true }); // honeypot
+
+  const clean = (v, max) => String(v || '').trim().slice(0, max);
+  const name = clean(b.name, 100);
+  const contact = clean(b.contact, 150);
+  if (name.length < 2 || contact.length < 5) {
+    return res.status(400).json({ ok: false, error: 'Please enter your name and a way to contact you.' });
+  }
+
+  const isEmail = EMAIL_RE.test(contact);
+  const lead = {
+    id: crypto.randomUUID(),
+    name,
+    email: isEmail ? contact : '',
+    phone: isEmail ? '' : contact,
+    business: clean(b.biz, 120),
+    plan: '',
+    budget: '',
+    message: `Brief rápido (3 toques)\nTipo de negocio: ${clean(b.biz, 120) || '—'}\nNecesita: ${clean(b.need, 120) || '—'}`,
+    status: 'new',
+    source: 'quick-brief',
+    receivedAt: new Date().toISOString(),
+  };
+
+  try {
+    store.addLead(lead);
+  } catch (err) {
+    console.error('Failed to save brief lead:', err);
+    return res.status(500).json({ ok: false, error: 'Something went wrong. Please email us directly.' });
+  }
+
+  sendNotification(lead);
+  telegram
+    .notifyOwner(`📥 Brief rápido: ${lead.name}${lead.business ? ' — ' + lead.business : ''}\nNecesita: ${clean(b.need, 120) || '—'}\nContacto: ${contact}`)
+    .catch(() => {});
+  if (lead.email) automations.replyToLead(lead, (m) => console.log(`[auto-reply] ${m}`)).catch(() => {});
+  res.json({ ok: true });
+});
+
+/* ============================================================
  * Checkout / onboarding — plan buttons lead here. Collects the
  * business questionnaire and files it as a high-intent lead.
  * ============================================================ */

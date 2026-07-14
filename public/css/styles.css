@@ -65,15 +65,22 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
   outline-offset: 2px;
 }
 
-/* ---------- nav (dark bar) ---------- */
+/* ---------- nav (floating glass pill) ---------- */
 
-.nav-wrap { position: sticky; top: 0; z-index: 50; background: var(--ink); }
+.nav-wrap { position: sticky; top: 14px; z-index: 50; padding: 0 16px; margin-bottom: -64px; }
 
 .nav {
+  max-width: 1200px; margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 48px; color: var(--cream);
+  padding: 12px 28px; color: var(--cream);
   font-family: var(--font-display);
   position: relative;
+  border-radius: 999px;
+  background: rgba(29, 44, 48, 0.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 14px 40px rgba(29, 44, 48, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .logo { font-weight: 800; font-size: 24px; color: var(--cream); letter-spacing: -0.01em; }
@@ -87,7 +94,7 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 
 .btn-nav {
   background: var(--gold); color: var(--ink) !important;
-  border-radius: 10px; padding: 11px 20px; font-weight: 800;
+  border-radius: 999px; padding: 11px 20px; font-weight: 800;
 }
 .btn-nav:hover { background: var(--gold-2); }
 
@@ -101,7 +108,7 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
   background-size: 300% 300%;
   animation: ll-gradient 16s ease infinite;
   color: var(--cream);
-  padding: 72px 48px 64px;
+  padding: 130px 48px 64px;
   position: relative; overflow: hidden;
   font-family: var(--font-display);
 }
@@ -355,43 +362,45 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 
 .section-sub { font-size: 15.5px; color: var(--soft); margin: 0 0 30px; max-width: 44em; }
 
-.brand-live {
-  display: grid; grid-template-columns: 1.05fr 1fr; align-items: stretch;
-  border: 2px solid var(--ink); border-radius: 18px; overflow: hidden;
-  background: #fff; margin-bottom: 22px; text-decoration: none; color: var(--ink);
+/* live project cards (glass) */
+.live-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.live-card {
+  border: 1px solid rgba(29, 44, 48, 0.12); border-radius: 22px; overflow: hidden;
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 18px 44px rgba(29, 44, 48, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  display: flex; flex-direction: column; color: inherit; text-decoration: none;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.brand-live:hover { transform: translateY(-4px); box-shadow: 8px 8px 0 var(--gold); color: var(--ink); }
-.brand-live-shot { display: flex; flex-direction: column; border-right: 2px solid var(--ink); min-height: 220px; }
-.brand-live-bar {
+.live-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 26px 56px rgba(29, 44, 48, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  color: inherit;
+}
+.live-shot { position: relative; padding: 22px 24px; display: grid; place-items: center; min-height: 194px; overflow: hidden; }
+.live-shot img { width: 150px; height: 150px; object-fit: contain; }
+.live-shot.img-missing::before {
+  content: "CULICHI TOWN"; font-family: var(--font-display); font-weight: 800;
+  font-size: 30px; color: #fff; letter-spacing: 0.02em;
+}
+.live-badge {
+  position: absolute; right: 10px; bottom: 10px;
   display: flex; align-items: center; gap: 6px;
-  background: var(--ink); padding: 9px 12px;
+  background: rgba(17, 17, 17, 0.6); color: #fff;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  padding: 5px 12px; border-radius: 999px;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
-.brand-live-bar span { width: 9px; height: 9px; border-radius: 50%; background: #47605f; }
-.brand-live-bar span:first-child { background: var(--terra-2); }
-.brand-live-bar span:nth-child(2) { background: var(--gold); }
-.brand-live-bar span:nth-child(3) { background: #35c36b; }
-.brand-live-bar i {
-  font-style: normal; font-size: 11.5px; color: #9fb9b4; font-weight: 600;
-  background: rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 2px 10px; margin-left: 6px;
+.live-badge i { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; }
+.live-body { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.live-body p { margin: 0; font-size: 13.5px; color: var(--soft); }
+.live-body .brand-scope { margin-top: auto; }
+.live-shot--spec { background: #111; }
+.spec-name {
+  font-family: "Anton", sans-serif; font-size: 38px; color: #fff; text-transform: uppercase;
+  position: relative; text-shadow: 0 0 14px rgba(255, 255, 255, 0.85), 0 0 34px rgba(255, 255, 255, 0.45);
 }
-.brand-live-screen {
-  flex: 1; display: grid; place-content: center; text-align: center; gap: 4px;
-  background:
-    radial-gradient(340px 180px at 85% 10%, rgba(255, 181, 37, 0.25), transparent 65%),
-    radial-gradient(300px 200px at 10% 95%, rgba(232, 84, 47, 0.3), transparent 70%),
-    var(--teal);
-  padding: 26px;
-}
-.bl-name { font-family: var(--font-display); font-weight: 800; font-size: clamp(24px, 3vw, 34px); color: #fff; letter-spacing: 0.02em; text-shadow: 3px 3px 0 rgba(29, 44, 48, 0.4); }
-.bl-sub { font-weight: 700; font-size: 11px; letter-spacing: 0.28em; color: #d6efe9; }
-.brand-live-body { padding: 24px 26px; display: flex; flex-direction: column; gap: 10px; }
-.brand-live-badge { display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.1em; color: var(--teal); }
-.bl-dot { width: 8px; height: 8px; border-radius: 50%; background: #35c36b; box-shadow: 0 0 0 3px rgba(53, 195, 107, 0.25); }
-.brand-live-body h3 { font-family: var(--font-display); font-size: 20px; }
-.brand-live-body p { margin: 0; font-size: 14px; color: var(--soft); }
-.brand-live-body .brand-scope { margin-top: auto; }
-.bl-visit { text-decoration: underline; text-underline-offset: 3px; }
+.spec-dot { position: absolute; border-radius: 50%; animation: ll-float 5s ease-in-out infinite; }
 
 .brands-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
 .brand-card {
@@ -575,6 +584,39 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 .chat-now a { color: var(--gold); font-weight: 800; text-decoration: underline; }
 .chat-now a:hover { color: var(--gold-2); }
 
+/* ---------- quick brief (3 taps) ---------- */
+
+.brief { gap: 18px; }
+.brief-progress { display: flex; align-items: center; gap: 10px; }
+.bdot { flex: 1; height: 6px; border-radius: 3px; background: var(--line); transition: background 0.2s ease; }
+.bdot.on { background: var(--terra); }
+.brief-step-label { font-size: 12.5px; font-weight: 700; color: var(--soft); white-space: nowrap; }
+.brief-step { display: grid; gap: 12px; }
+.brief-q { margin: 0; font-weight: 800; font-size: 17px; font-family: var(--font-display); }
+.brief-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bchip {
+  font: inherit; font-size: 14px; font-weight: 700; padding: 14px 12px;
+  border: 2px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink);
+  cursor: pointer; text-align: left;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.bchip:hover { border-color: var(--terra); transform: translateY(-1px); }
+.bchip.sel { border-color: var(--terra); background: #fdece4; }
+.brief-back {
+  justify-self: start; background: none; border: none; padding: 0;
+  color: var(--soft); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.brief-back:hover { color: var(--terra); }
+.brief-resumen { margin: 0; font-size: 13.5px; color: var(--soft); }
+.brief .btn-submit { border-radius: 999px; }
+.brief-tg {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: #2aabee; color: #fff; border-radius: 999px; padding: 13px;
+  font-weight: 700; font-size: 14.5px;
+  transition: filter 0.12s ease;
+}
+.brief-tg:hover { filter: brightness(1.07); color: #fff; }
+
 /* ---------- checkout / onboarding ---------- */
 
 [hidden] { display: none !important; }
@@ -706,9 +748,13 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
   .nav-toggle { display: flex; }
   .nav-links {
     display: none;
-    position: absolute; top: 100%; left: 0; right: 0;
+    position: absolute; top: calc(100% + 10px); left: 0; right: 0;
     flex-direction: column; align-items: stretch;
-    background: var(--ink); border-top: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(29, 44, 48, 0.94);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 24px;
     padding: 14px 24px 20px; gap: 6px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
     z-index: 50;

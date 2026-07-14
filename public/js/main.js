@@ -10,8 +10,8 @@ const t = es
       errGeneric: 'Algo salió mal. Intenta de nuevo o escríbenos directamente.',
       errNetwork: 'No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.',
       errName: 'Por favor escribe tu nombre.',
-      errEmail: 'Por favor escribe un correo electrónico válido.',
-      errMessage: 'Cuéntanos un poco sobre tu negocio, por favor.',
+      errContact: 'Dinos tu teléfono, WhatsApp o correo para mandarte tu plan.',
+      thanks2: '¡Gracias! Recibimos tu solicitud — hoy confirmamos y en 48 h tienes tu plan.',
     }
   : {
       sending: 'Sending...',
@@ -20,8 +20,8 @@ const t = es
       errGeneric: 'Something went wrong. Please try again or email us directly.',
       errNetwork: 'Could not reach the server. Please check your connection and try again.',
       errName: 'Please enter your name.',
-      errEmail: 'Please enter a valid email address.',
-      errMessage: 'Please tell us a bit about your business.',
+      errContact: 'Tell us your phone, WhatsApp or email so we can send your plan.',
+      thanks2: "Thanks! We got your request — we'll confirm today and your plan lands within 48h.",
     };
 
 // Footer year
@@ -72,50 +72,76 @@ if (fabHint && !sessionStorage.getItem('sofia-hint-dismissed')) {
   });
 }
 
-// Contact form submission
-const form = document.getElementById('contact-form');
-const status = form.querySelector('.form-status');
-const submitBtn = form.querySelector('button[type="submit"]');
+// Quick brief — 3-tap contact wizard
+const brief = document.getElementById('brief-form');
+if (brief) {
+  const status = brief.querySelector('.form-status');
+  const steps = [...brief.querySelectorAll('.brief-step')];
+  const dots = [...brief.querySelectorAll('.bdot')];
+  const submitBtn = brief.querySelector('button[type="submit"]');
+  const picked = { biz: '', need: '' };
+  let step = 1;
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  status.textContent = '';
-  status.className = 'form-status';
+  const showError = (msg) => { status.textContent = msg; status.className = 'form-status err'; };
 
-  const data = Object.fromEntries(new FormData(form).entries());
-
-  // Client-side checks mirror the server's
-  if (!data.name || data.name.trim().length < 2) return showError(t.errName);
-  if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return showError(t.errEmail);
-  if (!data.message || data.message.trim().length < 10) return showError(t.errMessage);
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = t.sending;
-
-  try {
-    const res = await fetch('/api/contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    const body = await res.json().catch(() => ({}));
-
-    if (res.ok && body.ok) {
-      form.reset();
-      status.textContent = t.thanks;
-      status.classList.add('ok');
-    } else {
-      showError(body.error || t.errGeneric);
+  function goTo(n) {
+    step = n;
+    steps.forEach((s) => { s.hidden = Number(s.dataset.bstep) !== n; });
+    dots.forEach((d) => d.classList.toggle('on', Number(d.dataset.dot) <= n));
+    document.getElementById('brief-num').textContent = n;
+    status.textContent = '';
+    status.className = 'form-status';
+    if (n === 3) {
+      document.getElementById('brief-resumen').textContent = `${picked.biz || '…'} · ${picked.need || '…'}`;
     }
-  } catch {
-    showError(t.errNetwork);
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = t.submit;
   }
-});
 
-function showError(msg) {
-  status.textContent = msg;
-  status.classList.add('err');
+  brief.addEventListener('click', (e) => {
+    const chip = e.target.closest('.bchip');
+    if (chip) {
+      const field = chip.closest('.brief-chips').dataset.field;
+      picked[field] = chip.textContent.trim();
+      chip.closest('.brief-chips').querySelectorAll('.bchip').forEach((b) => b.classList.toggle('sel', b === chip));
+      goTo(field === 'biz' ? 2 : 3);
+      return;
+    }
+    if (e.target.closest('.brief-back')) goTo(Math.max(1, step - 1));
+  });
+
+  brief.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = brief.elements.name.value.trim();
+    const contact = brief.elements.contact.value.trim();
+    if (name.length < 2) return showError(t.errName);
+    if (contact.length < 5) return showError(t.errContact);
+
+    submitBtn.disabled = true;
+    const label = submitBtn.textContent;
+    submitBtn.textContent = t.sending;
+
+    try {
+      const res = await fetch('/api/brief', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          biz: picked.biz, need: picked.need, name, contact,
+          website: brief.elements.website.value,
+          lang: es ? 'es' : 'en',
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body.ok) {
+        steps.forEach((s) => { s.hidden = true; });
+        brief.querySelector('.brief-progress').hidden = true;
+        status.textContent = t.thanks2;
+        status.className = 'form-status ok';
+      } else {
+        showError(body.error || t.errGeneric);
+      }
+    } catch {
+      showError(t.errNetwork);
+    }
+    submitBtn.disabled = false;
+    submitBtn.textContent = label;
+  });
 }

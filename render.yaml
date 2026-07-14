@@ -15,7 +15,7 @@ services:
   - type: web
     name: locallift
     runtime: node
-    plan: free
+    plan: starter
     buildCommand: npm install
     startCommand: npm start
     autoDeploy: true
@@ -62,8 +62,8 @@ services:
         value: "false"
       - key: WEEKLY_DIGEST
         value: "false"
-    # Uncomment on the Starter plan for persistent data:
-    # disk:
-    #   name: locallift-data
-    #   mountPath: /opt/render/project/src/data
-    #   sizeGB: 1
+    # Persistent disk (paid plan): data/db.json survives restarts & deploys
+    disk:
+      name: locallift-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

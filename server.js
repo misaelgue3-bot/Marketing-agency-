@@ -237,6 +237,10 @@ app.post('/api/contact', (req, res) => {
   }
 
   sendNotification(lead);
+  // Telegram alert too, so no lead is ever lost silently
+  telegram
+    .notifyOwner(`📥 Nuevo lead del formulario web: ${lead.name}${lead.business ? ' — ' + lead.business : ''}\nPlan: ${lead.plan || '—'} · ${lead.email}${lead.phone ? ' · ' + lead.phone : ''}\n"${lead.message.slice(0, 200)}"`)
+    .catch(() => {});
   // Sofía answers the lead automatically when AUTO_LEAD_REPLY=true
   automations.replyToLead(lead, (m) => console.log(`[auto-reply] ${m}`)).catch(() => {});
   res.json({ ok: true });

@@ -3,110 +3,177 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LocalLift Admin</title>
+<title>Your LocalLift — Admin</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #16343c; --ink-soft: #5b6d72; --ink-muted: #8a9a9e;
-    --brand: #e8542f; --teal: #12766b; --teal-soft: #4aa79b;
-    --bg: #f7f5f1; --surface: #ffffff; --line: #e6e0d6;
-    --good: #148a4e; --warn: #b97a00; --bad: #c23a3a;
-    --radius: 12px;
+    /* dark theme — same variable names the app logic already uses */
+    --bg: #10191c; --surface: #1b282c; --surface-2: #223136; --line: rgba(255, 255, 255, 0.09);
+    --ink: #e8f0ee; --ink-soft: #9fb9b4; --ink-muted: #74898d;
+    --brand: #e8542f; --brand-2: #f0703c; --gold: #ffb525; --teal: #3fbfa8;
+    --good: #4fd08c; --warn: #ffc754; --bad: #ff7a6e;
+    --radius: 14px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "Inter", system-ui, sans-serif; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.55; }
   button { font: inherit; cursor: pointer; }
-  input, select, textarea { font: inherit; padding: 0.5rem 0.7rem; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); width: 100%; }
-  input:focus, select:focus, textarea:focus { outline: 2px solid var(--teal); outline-offset: 1px; border-color: var(--teal); }
+  ::selection { background: rgba(255, 181, 37, 0.35); }
+  input, select, textarea {
+    font: inherit; padding: 0.55rem 0.75rem; border: 1.5px solid var(--line); border-radius: 10px;
+    background: #131e22; color: var(--ink); width: 100%;
+  }
+  input::placeholder, textarea::placeholder { color: var(--ink-muted); }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--gold); outline-offset: 1px; border-color: transparent; }
+  select option { background: #131e22; }
+  a { color: var(--teal); }
 
-  header { background: var(--ink); color: #fff; padding: 0.9rem 1.5rem; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; }
-  header .logo { font-weight: 800; font-size: 1.15rem; }
-  header .logo span { color: #ffb525; }
-  nav { display: flex; gap: 0.3rem; flex-wrap: wrap; }
-  nav button { background: none; border: 0; color: #b9cfcb; padding: 0.45rem 0.9rem; border-radius: 8px; font-weight: 600; }
-  nav button:hover { color: #fff; }
-  nav button.on { background: rgba(255,255,255,0.14); color: #fff; }
+  /* ---------- layout: sidebar + content ---------- */
+  .app { display: flex; min-height: 100vh; }
+  aside {
+    width: 232px; flex: none;
+    background: linear-gradient(180deg, #16232780, transparent), #141f23;
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    padding: 1.3rem 0.9rem 1rem;
+    position: sticky; top: 0; height: 100vh;
+  }
+  .side-logo {
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 1.25rem;
+    color: #fff; padding: 0 0.7rem 1.1rem; letter-spacing: -0.01em;
+  }
+  .side-logo span { color: var(--gold); }
+  .side-logo small { display: block; font-size: 0.68rem; font-weight: 600; color: var(--ink-muted); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 2px; }
+  nav { display: flex; flex-direction: column; gap: 0.2rem; }
+  nav button {
+    display: flex; align-items: center; gap: 0.65rem;
+    background: none; border: 0; color: var(--ink-soft);
+    padding: 0.6rem 0.75rem; border-radius: 10px; font-weight: 600; font-size: 0.92rem;
+    text-align: left; width: 100%; transition: background 0.12s, color 0.12s;
+  }
+  nav button .ico { font-size: 1.02rem; width: 1.4rem; text-align: center; flex: none; }
+  nav button:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
+  nav button.on { background: linear-gradient(90deg, rgba(232, 84, 47, 0.28), rgba(232, 84, 47, 0.1)); color: #fff; box-shadow: inset 2px 0 0 var(--brand-2); }
+  .side-foot { margin-top: auto; padding: 0.9rem 0.75rem 0; border-top: 1px solid var(--line); font-size: 0.85rem; }
+  .side-foot a { color: var(--ink-soft); text-decoration: none; font-weight: 600; display: block; padding: 0.3rem 0; }
+  .side-foot a:hover { color: var(--gold); }
 
-  main { max-width: 1100px; margin: 1.5rem auto 4rem; padding: 0 1.2rem; }
-  h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+  .content { flex: 1; min-width: 0; }
+  main { max-width: 1120px; margin: 0 auto; padding: 1.8rem 1.6rem 4rem; }
+  h2 { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.55rem; font-weight: 800; margin-bottom: 1.1rem; letter-spacing: -0.01em; }
   h3 { font-size: 1rem; }
 
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.9rem; margin-bottom: 1.5rem; }
-  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.1rem; }
-  .tile .label { font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; }
-  .tile .value { font-size: 1.7rem; font-weight: 800; margin-top: 0.15rem; }
+  /* ---------- tiles ---------- */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 0.9rem; margin-bottom: 1.4rem; }
+  .tile {
+    background: linear-gradient(160deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.15rem;
+  }
+  .tile .label { font-size: 0.72rem; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .tile .value { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.8rem; font-weight: 800; margin-top: 0.15rem; color: #fff; }
+  .tile:first-child .value { color: var(--gold); }
   .tile .sub { font-size: 0.8rem; color: var(--ink-muted); }
 
   .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.2rem 1.3rem; margin-bottom: 1.3rem; }
   .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
 
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-  th, td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); }
-  tr:hover td { background: #fbf9f6; }
+  th, td { text-align: left; padding: 0.6rem 0.65rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-muted); }
+  tr:hover td { background: rgba(255, 255, 255, 0.025); }
   td .small { font-size: 0.8rem; color: var(--ink-muted); }
   .table-wrap { overflow-x: auto; }
 
-  .btn { border: 0; border-radius: 999px; padding: 0.5rem 1rem; font-weight: 700; font-size: 0.85rem; }
-  .btn-primary { background: var(--brand); color: #fff; }
-  .btn-primary:hover { filter: brightness(1.08); }
-  .btn-teal { background: var(--teal); color: #fff; }
+  .btn { border: 0; border-radius: 999px; padding: 0.5rem 1.05rem; font-weight: 700; font-size: 0.85rem; }
+  .btn-primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-teal { background: var(--teal); color: #0d1a17; }
+  .btn-teal:hover { filter: brightness(1.08); }
   .btn-ghost { background: none; border: 1.5px solid var(--line); color: var(--ink-soft); }
-  .btn-ghost:hover { border-color: var(--brand); color: var(--brand); }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
   .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.78rem; }
   .btn[disabled] { opacity: 0.5; cursor: wait; }
 
   .pill { display: inline-block; padding: 0.12rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
-  .pill.active, .pill.approved, .pill.live, .pill.converted { background: #e2f3e9; color: var(--good); }
-  .pill.new, .pill.draft { background: #fdeee7; color: var(--brand); }
-  .pill.contacted { background: #fff3d6; color: var(--warn); }
-  .pill.paused { background: #eee9e0; color: var(--ink-soft); }
-  .pill.churned, .pill.closed, .pill.archived { background: #fbe4e4; color: var(--bad); }
+  .pill.active, .pill.approved, .pill.live, .pill.converted { background: rgba(79, 208, 140, 0.16); color: var(--good); }
+  .pill.new, .pill.draft { background: rgba(240, 112, 60, 0.18); color: #ff9d73; }
+  .pill.contacted { background: rgba(255, 199, 84, 0.15); color: var(--warn); }
+  .pill.paused { background: rgba(255, 255, 255, 0.08); color: var(--ink-soft); }
+  .pill.churned, .pill.closed, .pill.archived { background: rgba(255, 122, 110, 0.15); color: var(--bad); }
 
-  form.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.7rem; align-items: end; }
-  form.grid label { font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); display: grid; gap: 0.25rem; }
+  form.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 0.75rem; align-items: end; }
+  form.grid label { font-size: 0.76rem; font-weight: 600; color: var(--ink-soft); display: grid; gap: 0.3rem; }
   form.grid .full { grid-column: 1 / -1; }
 
-  /* revenue chart */
-  .chart { display: flex; align-items: flex-end; gap: 10px; height: 180px; padding-top: 0.5rem; }
+  /* ---------- revenue chart ---------- */
+  .chart { display: flex; align-items: flex-end; gap: 10px; height: 190px; padding-top: 0.5rem; }
   .chart .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; height: 100%; position: relative; }
-  .chart .bar { width: 100%; max-width: 64px; background: var(--teal); border-radius: 4px 4px 0 0; min-height: 2px; transition: background 0.15s; }
-  .chart .col:hover .bar { background: var(--teal-soft); }
+  .chart .bar { width: 100%; max-width: 64px; background: linear-gradient(180deg, var(--gold), var(--brand-2)); border-radius: 6px 6px 0 0; min-height: 2px; transition: filter 0.15s; }
+  .chart .col:hover .bar { filter: brightness(1.15); }
   .chart .val { font-size: 0.78rem; font-weight: 700; color: var(--ink-soft); }
   .chart .lbl { font-size: 0.75rem; color: var(--ink-muted); }
 
-  .empty { padding: 2rem; text-align: center; color: var(--ink-muted); }
-  .notice { padding: 0.7rem 1rem; border-radius: 10px; font-size: 0.87rem; margin-bottom: 1rem; }
-  .notice.warn { background: #fff3d6; color: #7a5200; }
-  .notice.ok { background: #e2f3e9; color: var(--good); }
+  .empty { padding: 2.2rem; text-align: center; color: var(--ink-muted); }
+  .notice { padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.87rem; margin-bottom: 1rem; border: 1px solid; }
+  .notice.warn { background: rgba(255, 199, 84, 0.09); border-color: rgba(255, 199, 84, 0.3); color: var(--warn); }
+  .notice.ok { background: rgba(79, 208, 140, 0.09); border-color: rgba(79, 208, 140, 0.28); color: var(--good); }
 
-  dialog { border: 0; border-radius: var(--radius); padding: 0; max-width: 760px; width: 92%; max-height: 85vh; }
-  dialog::backdrop { background: rgba(22, 52, 60, 0.55); }
+  dialog { border: 1px solid var(--line); border-radius: var(--radius); padding: 0; max-width: 760px; width: 92%; max-height: 85vh; background: var(--surface); color: var(--ink); }
+  dialog::backdrop { background: rgba(6, 12, 14, 0.72); }
   .dialog-body { padding: 1.4rem; overflow-y: auto; max-height: 85vh; }
   .dialog-body h3 { margin: 1.1rem 0 0.4rem; color: var(--teal); }
   .dialog-body h3:first-of-type { margin-top: 0.8rem; }
-  .ad-card { border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem 1rem; margin: 0.5rem 0; }
-  .ad-card .platform { font-size: 0.75rem; font-weight: 700; color: var(--brand); text-transform: uppercase; }
+  .ad-card { border: 1px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 0.8rem 1rem; margin: 0.5rem 0; }
+  .ad-card .platform { font-size: 0.75rem; font-weight: 700; color: var(--gold); text-transform: uppercase; }
   .close-x { float: right; background: none; border: 0; font-size: 1.3rem; color: var(--ink-muted); }
-  #toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 0.7rem 1.3rem; border-radius: 999px; font-size: 0.88rem; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+  .close-x:hover { color: #fff; }
+  pre { color: var(--ink-soft); }
+  #toast {
+    position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%);
+    background: var(--gold); color: #1d2c30; padding: 0.7rem 1.3rem; border-radius: 999px;
+    font-size: 0.88rem; font-weight: 700; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 50;
+  }
   #toast.show { opacity: 1; }
+
+  /* ---------- small screens: sidebar becomes a top bar ---------- */
+  @media (max-width: 880px) {
+    .app { flex-direction: column; }
+    aside { width: 100%; height: auto; position: static; flex-direction: column; padding: 0.9rem 0.9rem 0.6rem; border-right: 0; border-bottom: 1px solid var(--line); }
+    .side-logo { padding-bottom: 0.6rem; }
+    nav { flex-direction: row; overflow-x: auto; gap: 0.25rem; padding-bottom: 0.4rem; scrollbar-width: none; }
+    nav::-webkit-scrollbar { display: none; }
+    nav button { white-space: nowrap; width: auto; padding: 0.5rem 0.8rem; }
+    nav button.on { box-shadow: inset 0 -2px 0 var(--brand-2); }
+    .side-foot { display: none; }
+    main { padding: 1.2rem 1rem 3rem; }
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">Local<span>Lift</span> Admin</div>
-  <nav id="nav">
-    <button data-tab="dashboard" class="on">Dashboard</button>
-    <button data-tab="leads">Leads</button>
-    <button data-tab="clients">Clients</button>
-    <button data-tab="payments">Payments</button>
-    <button data-tab="campaigns">AI Campaigns</button>
-    <button data-tab="outbox">Outbox</button>
-    <button data-tab="settings">Settings</button>
-  </nav>
-</header>
-
-<main id="main"></main>
+<div class="app">
+  <aside>
+    <div class="side-logo">Local<span>Lift</span><small>Panel de control</small></div>
+    <nav id="nav">
+      <button data-tab="dashboard" class="on"><span class="ico">📊</span> Dashboard</button>
+      <button data-tab="leads"><span class="ico">📥</span> Leads</button>
+      <button data-tab="clients"><span class="ico">👥</span> Clients</button>
+      <button data-tab="payments"><span class="ico">💵</span> Payments</button>
+      <button data-tab="campaigns"><span class="ico">✨</span> AI Campaigns</button>
+      <button data-tab="outbox"><span class="ico">📤</span> Outbox</button>
+      <button data-tab="settings"><span class="ico">⚙️</span> Settings</button>
+    </nav>
+    <div class="side-foot">
+      <a href="/" target="_blank" rel="noopener">↗ Ver mi sitio</a>
+      <a href="/sofia-app.html" target="_blank" rel="noopener">💬 Probar a Sofía</a>
+    </div>
+  </aside>
+  <div class="content">
+    <main id="main"></main>
+  </div>
+</div>
 <dialog id="modal"><div class="dialog-body" id="modal-body"></div></dialog>
 <div id="toast" role="status"></div>
 
@@ -555,10 +622,10 @@ main.addEventListener('submit', async (e) => {
 const tabs = { dashboard: renderDashboard, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns, outbox: renderOutbox, settings: renderSettings };
 
 $('#nav').addEventListener('click', (e) => {
-  const tab = e.target.dataset?.tab;
-  if (!tab) return;
-  document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('on', b === e.target));
-  tabs[tab]().catch((err) => { main.innerHTML = `<div class="notice warn">Error: ${esc(err.message)}</div>`; });
+  const btn = e.target.closest('button[data-tab]');
+  if (!btn) return;
+  document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('on', b === btn));
+  tabs[btn.dataset.tab]().catch((err) => { main.innerHTML = `<div class="notice warn">Error: ${esc(err.message)}</div>`; });
 });
 
 renderDashboard();

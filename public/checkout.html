@@ -33,6 +33,8 @@
             <option value="Inicial">Inicial — ${{PRICE_1}}/mes</option>
             <option value="Crecimiento">Crecimiento — ${{PRICE_2}}/mes</option>
             <option value="Pro">Pro — ${{PRICE_3}}/mes</option>
+            <option value="Web">Página web — ${{PRICE_WEB1}} pago único</option>
+            <option value="WebPro">Sitio completo — ${{PRICE_WEB2}} pago único</option>
           </select>
         </label>
       </div>
@@ -172,7 +174,7 @@
     </section>
   </main>
 
-  <script>window.CO_PRICES = { p1: {{PRICE_1}}, p2: {{PRICE_2}}, p3: {{PRICE_3}} }; window.CO_STRIPE = '{{STRIPE_ON}}' === '1';</script>
+  <script>window.CO_PRICES = { p1: {{PRICE_1}}, p2: {{PRICE_2}}, p3: {{PRICE_3}}, w1: {{PRICE_WEB1}}, w2: {{PRICE_WEB2}}, host: {{PRICE_HOST}} }; window.CO_STRIPE = '{{STRIPE_ON}}' === '1';</script>
   <script src="/js/checkout.js"></script>
 </body>
 </html>

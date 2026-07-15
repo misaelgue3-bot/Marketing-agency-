@@ -183,7 +183,6 @@
             <div class="plan-price">${{PRICE_1}}<small>/mes</small></div>
             <p class="plan-tag">Que te encuentren.</p>
             <ul class="plan-features">
-              <li>Página web de una página (creada y hospedada)</li>
               <li>Perfil de Google Business optimizado</li>
               <li>Registro en directorios locales</li>
               <li>8 publicaciones en redes al mes</li>
@@ -199,7 +198,6 @@
             <ul class="plan-features">
               <li>Todo lo del plan Inicial</li>
               <li>Logo y mini guía de marca (colores y tipografía)</li>
-              <li>Web de varias páginas con reservas y formularios</li>
               <li>SEO local (palabras clave, contenido, reseñas)</li>
               <li>16 publicaciones + respuestas a tu comunidad</li>
               <li>1 campaña de anuncios (Google o Meta)</li>
@@ -222,7 +220,25 @@
             <a href="/checkout.html?plan=Pro" class="btn-plan">Ir a Pro</a>
           </div>
         </div>
-        <p class="pricing-note">Sin contratos de permanencia · el presupuesto de anuncios se paga directo a Google/Meta y es 100% tuyo · <a href="#contact">¿solo un proyecto? Pregúntanos</a></p>
+        <div class="web-solo reveal">
+          <div class="web-solo-head">
+            <div class="plan-label">Página web — proyecto aparte</div>
+            <p>La página web no está incluida en los planes: es un <strong>proyecto único</strong> — la pagas una vez y es tuya para siempre. El hosting (mantenerla en línea) es ${{PRICE_HOST}}/mes, siempre por separado.</p>
+          </div>
+          <div class="web-solo-tiers">
+            <div class="web-tier">
+              <div class="plan-price">${{PRICE_WEB1}}<small> pago único</small></div>
+              <p class="plan-tag">Sitio de una página</p>
+              <a href="/checkout.html?plan=Web" class="btn-plan">Quiero mi página →</a>
+            </div>
+            <div class="web-tier">
+              <div class="plan-price">${{PRICE_WEB2}}<small> pago único</small></div>
+              <p class="plan-tag">Sitio completo, varias páginas</p>
+              <a href="/checkout.html?plan=WebPro" class="btn-plan">Quiero mi sitio →</a>
+            </div>
+          </div>
+        </div>
+        <p class="pricing-note">Sin contratos de permanencia · el presupuesto de anuncios se paga directo a Google/Meta y es 100% tuyo · la página web y el hosting se cotizan aparte · <a href="#contact">¿solo un proyecto? Pregúntanos</a></p>
       </div>
     </section>
 
@@ -282,6 +298,10 @@
       <div class="faq-wrap">
         <h2 class="h-serif">Preguntas <em>frecuentes.</em></h2>
         <div class="faq-list">
+          <details>
+            <summary>¿La página web está incluida en el plan mensual?</summary>
+            <p>No — los planes mensuales cubren tu marketing y tu identidad de marca. La página web es un proyecto aparte con pago único: ${{PRICE_WEB1}} el sitio de una página o ${{PRICE_WEB2}} el sitio completo. El hosting es ${{PRICE_HOST}}/mes, siempre por separado.</p>
+          </details>
           <details>
             <summary>¿Tengo que firmar un contrato de permanencia?</summary>
             <p>No. Todos los planes son mes a mes. Nos ganamos tu confianza con resultados, no con contratos que te amarran. Solo pedimos 30 días de aviso para cerrar todo en orden.</p>

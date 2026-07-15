@@ -359,6 +359,26 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 
 .pricing-note { text-align: center; font-size: 13.5px; color: var(--soft); margin-top: 16px; }
 
+/* website as a separate one-time project */
+.web-solo {
+  display: grid; grid-template-columns: 1.1fr 1fr; gap: 26px; align-items: center;
+  background: #fdf3e3; border: 2px solid var(--ink); border-radius: 18px;
+  padding: 24px 28px; margin-top: 22px;
+  box-shadow: 6px 6px 0 rgba(29, 44, 48, 0.15);
+}
+.web-solo-head p { margin: 8px 0 0; font-size: 14px; color: var(--soft); }
+.web-solo-tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.web-tier { background: #fff; border: 2px solid var(--ink); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+.web-tier .plan-price { font-size: 34px; margin: 0; }
+.web-tier .plan-tag { margin: 0 0 10px; }
+.web-tier .btn-plan { margin-top: auto; }
+@media (max-width: 980px) {
+  .web-solo { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .web-solo-tiers { grid-template-columns: 1fr; }
+}
+
 /* ---------- brand showcase ---------- */
 
 .section-sub { font-size: 15.5px; color: var(--soft); margin: 0 0 30px; max-width: 44em; }

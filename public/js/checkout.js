@@ -7,29 +7,45 @@ const PLANS = es
   ? {
       Inicial: {
         price: P.p1,
-        feats: ['Página web de una página', 'Perfil de Google Business optimizado', '8 publicaciones en redes al mes'],
+        feats: ['Perfil de Google Business optimizado', '8 publicaciones en redes al mes', 'Reporte mensual en palabras claras'],
       },
       Crecimiento: {
         price: P.p2,
-        feats: ['Todo lo del plan Inicial', 'Web completa + SEO local', '16 publicaciones + 1 campaña de anuncios'],
+        feats: ['Todo lo del plan Inicial', 'Logo y mini guía de marca + SEO local', '16 publicaciones + 1 campaña de anuncios'],
       },
       Pro: {
         price: P.p3,
         feats: ['Todo lo del plan Crecimiento', 'Varias campañas + landing pages', 'Email marketing y soporte prioritario'],
       },
+      Web: {
+        price: P.w1, per: ' pago único',
+        feats: ['Sitio profesional de una página', 'Tuya para siempre — pagas una vez', 'Hosting aparte: $' + P.host + '/mes'],
+      },
+      WebPro: {
+        price: P.w2, per: ' pago único',
+        feats: ['Sitio completo de varias páginas', 'Tuyo para siempre — pagas una vez', 'Hosting aparte: $' + P.host + '/mes'],
+      },
     }
   : {
       Starter: {
         price: P.p1,
-        feats: ['One-page website', 'Optimized Google Business profile', '8 social posts per month'],
+        feats: ['Optimized Google Business profile', '8 social posts per month', 'Monthly report in plain words'],
       },
       Growth: {
         price: P.p2,
-        feats: ['Everything in Starter', 'Full website + local SEO', '16 posts + 1 ad campaign'],
+        feats: ['Everything in Starter', 'Logo & mini brand guide + local SEO', '16 posts + 1 ad campaign'],
       },
       Pro: {
         price: P.p3,
         feats: ['Everything in Growth', 'Multiple campaigns + landing pages', 'Email marketing & priority support'],
+      },
+      Website: {
+        price: P.w1, per: ' one-time',
+        feats: ['Professional one-page site', 'Yours forever — pay once', 'Hosting billed separately: $' + P.host + '/mo'],
+      },
+      WebsitePro: {
+        price: P.w2, per: ' one-time',
+        feats: ['Full multi-page website', 'Yours forever — pay once', 'Hosting billed separately: $' + P.host + '/mo'],
       },
     };
 
@@ -85,9 +101,11 @@ const names = Object.keys(PLANS);
 let plan = new URLSearchParams(location.search).get('plan');
 if (!names.includes(plan)) plan = names[1];
 
+const PLAN_NAMES = { Web: 'Página web', WebPro: 'Sitio completo', Website: 'One-page website', WebsitePro: 'Full website' };
+
 function renderPlan() {
-  document.getElementById('co-plan-name').textContent = plan;
-  document.getElementById('co-plan-price').innerHTML = '$' + PLANS[plan].price + '<small>' + t.per + '</small>';
+  document.getElementById('co-plan-name').textContent = PLAN_NAMES[plan] || plan;
+  document.getElementById('co-plan-price').innerHTML = '$' + PLANS[plan].price + '<small>' + (PLANS[plan].per || t.per) + '</small>';
   const ul = document.getElementById('co-plan-feats');
   ul.innerHTML = '';
   PLANS[plan].feats.forEach((f) => {
@@ -97,7 +115,7 @@ function renderPlan() {
   });
   planSelect.value = plan;
   // Keep the language switch pointing at the same plan
-  const other = { Inicial: 'Starter', Crecimiento: 'Growth', Pro: 'Pro', Starter: 'Inicial', Growth: 'Crecimiento' }[plan] || plan;
+  const other = { Inicial: 'Starter', Crecimiento: 'Growth', Pro: 'Pro', Starter: 'Inicial', Growth: 'Crecimiento', Web: 'Website', Website: 'Web', WebPro: 'WebsitePro', WebsitePro: 'WebPro' }[plan] || plan;
   langLink.href = langLink.href.split('?')[0] + '?plan=' + encodeURIComponent(other);
 }
 
@@ -200,9 +218,11 @@ function showDone() {
   document.getElementById('co-intro').hidden = true;
   document.getElementById('co-plan-card').hidden = true;
   form.hidden = true;
-  document.getElementById('co-done-plan').textContent = plan;
+  document.getElementById('co-done-plan').textContent = PLAN_NAMES[plan] || plan;
   if (window.CO_STRIPE && payBox) {
     document.getElementById('co-pay-amt').textContent = PLANS[plan].price;
+    const suffixEl = document.getElementById('co-pay-amt').nextSibling;
+    if (suffixEl && PLANS[plan].per) suffixEl.textContent = PLANS[plan].per.trim() === 'pago único' || PLANS[plan].per.trim() === 'one-time' ? ' ' + PLANS[plan].per.trim() : suffixEl.textContent;
     payBox.hidden = false;
   }
   document.getElementById('co-done').hidden = false;

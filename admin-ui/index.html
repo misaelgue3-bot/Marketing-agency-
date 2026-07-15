@@ -551,6 +551,15 @@ async function renderSettings() {
         <label>Plan 3 price — Pro ($/month)
           <input name="price3" type="number" min="1" value="${s.price3}" required>
         </label>
+        <label>Página web — una página ($ pago único)
+          <input name="priceWeb1" type="number" min="1" value="${s.priceWeb1 || 499}" required>
+        </label>
+        <label>Sitio completo ($ pago único)
+          <input name="priceWeb2" type="number" min="1" value="${s.priceWeb2 || 899}" required>
+        </label>
+        <label>Hosting ($/mes, siempre aparte)
+          <input name="priceHosting" type="number" min="1" value="${s.priceHosting || 15}" required>
+        </label>
         <div><button class="btn btn-primary">Save — updates the live site</button></div>
       </form>
       <p class="small" style="color:var(--ink-muted);margin-top:0.8rem">Applies to both the Spanish and English pages. Tip: after changing prices, check the pricing section on your site to confirm it looks right.</p>
@@ -561,14 +570,14 @@ async function renderSettings() {
 
 const PB_ADS = [
   { tag: 'AD 1 · EL SÍNTOMA', vis: 'Foto cálida de un negocio local lleno (o el Spot 2D #1).',
-    es: 'Tu comida es la mejor de la ciudad. ¿Entonces por qué tu competencia está más llena?\n\nNo es la sazón — es que a ellos sí los encuentran en Google.\n\nNosotros te ponemos ahí: página web, perfil de Google y redes, todo hecho por ti, en tu idioma, desde $199 al mes. Sin contratos que amarran.\n\nPide tu plan gratis — te lo mandamos por escrito en 48 horas. 🌮\n\nTitular: Marketing en tu idioma — desde $199/mes\nCTA: Más información → yourlocallift.com',
-    en: "Your food is the best in town. So why is the competition busier? It's not the cooking — it's that Google finds them first. Website, Google profile and social media, done for you, from $199/mo. Get your free plan — in writing, within 48 hours." },
+    es: 'Tu comida es la mejor de la ciudad. ¿Entonces por qué tu competencia está más llena?\n\nNo es la sazón — es que a ellos sí los encuentran en Google.\n\nNosotros te ponemos ahí: tu página web desde $499 (pago único, tuya para siempre) y tu marketing — Google, redes y anuncios — desde $199 al mes. Sin contratos que amarran.\n\nPide tu plan gratis — te lo mandamos por escrito en 48 horas. 🌮\n\nTitular: Marketing en tu idioma — desde $199/mes\nCTA: Más información → yourlocallift.com',
+    en: "Your food is the best in town. So why is the competition busier? It's not the cooking — it's that Google finds them first. Websites from $499 one-time, and marketing from $199/mo, done for you. Get your free plan — in writing, within 48 hours." },
   { tag: 'AD 2 · LA CUENTA CLARA', vis: 'Tu gráfica de crecimiento (o el Spot 2D #2).',
     es: '¿Cuánto te cuesta un empleado por día? ¿$120? ¿$150?\n\nPor menos de $7 al día tienes un equipo completo de marketing: tu página web, tu perfil de Google optimizado y tus redes publicando solas — mientras tú atiendes tu negocio.\n\nPrecios fijos, en tu idioma, y el primer plan es gratis y por escrito. Tú decides con calma.\n\nTitular: Un equipo de marketing por menos de $7/día\nCTA: Cotizar gratis → yourlocallift.com',
     en: 'What does one employee cost you per day? $120? For less than $7/day you get a full marketing team: website, optimized Google profile and social media on autopilot. Flat prices. Your first plan is free, in writing.' },
   { tag: 'AD 3 · LA PRUEBA', vis: 'Captura real de culichitowns.com en un teléfono (pide permiso al cliente).',
-    es: 'Así se ve una marca hecha con cariño: mira el sitio que construimos para Culichi Town, mariscos estilo Sinaloa con 8 sucursales. 🍅\n\nMenú, historia y localizador de sucursales — todo en un sitio que se siente como el restaurante.\n\nTu negocio también merece verse así de profesional. Logo, colores, web y redes — desde $199 al mes, sin contratos.\n\nTitular: Marcas que se notan — mira nuestro trabajo\nCTA: Ver más → yourlocallift.com',
-    en: 'This is what a brand built with care looks like: see the site we built for Culichi Town — Sinaloa-style seafood with 8 locations. Your business deserves to look this professional. From $199/mo, no contracts.' },
+    es: 'Así se ve una marca hecha con cariño: mira el sitio que construimos para Culichi Town, mariscos estilo Sinaloa con 8 sucursales. 🍅\n\nMenú, historia y localizador de sucursales — todo en un sitio que se siente como el restaurante.\n\nTu negocio también merece verse así de profesional. Tu web desde $499 (pago único) y tu marca y marketing desde $199 al mes, sin contratos.\n\nTitular: Marcas que se notan — mira nuestro trabajo\nCTA: Ver más → yourlocallift.com',
+    en: 'This is what a brand built with care looks like: see the site we built for Culichi Town — Sinaloa-style seafood with 8 locations. Your business deserves to look this professional. Websites from $499 one-time; brand & marketing from $199/mo. No contracts.' },
 ];
 
 const PB_PROMPTS = [
@@ -585,8 +594,8 @@ const PB_PROMPTS = [
 ];
 
 const PB_GOOGLE = {
-  titulares: 'Página web para tu negocio · Desde $199 al mes, todo incluido · Marketing en tu idioma · Sin contratos que amarran · Tu plan gratis en 48 horas · Web + Google + redes, hecho por ti · Precios fijos y claros · Marcas y marketing para negocios latinos · Sal primero en Google · Atendemos en español e inglés',
-  descripciones: 'Web, perfil de Google y redes sociales hechas por ti, a precio fijo. Pide tu plan gratis. | Tu negocio trabaja duro. Que se note. Plan por escrito en 48 horas, sin compromiso. | Sin contratos de permanencia. Tu dominio y tus cuentas siempre son tuyos. | Precios desde $199/mes. Atención en español e inglés. Chatea con Sofía 24/7.',
+  titulares: 'Página web desde $499 — pago único · Marketing desde $199 al mes · Marketing en tu idioma · Sin contratos que amarran · Tu plan gratis en 48 horas · Web + Google + redes, hecho por ti · Precios fijos y claros · Marcas y marketing para negocios latinos · Sal primero en Google · Atendemos en español e inglés',
+  descripciones: 'Tu página web desde $499 (pago único) y tu marketing desde $199/mes. Pide tu plan gratis. | Tu negocio trabaja duro. Que se note. Plan por escrito en 48 horas, sin compromiso. | Sin contratos de permanencia. Tu dominio y tus cuentas siempre son tuyos. | Precios desde $199/mes. Atención en español e inglés. Chatea con Sofía 24/7.',
 };
 
 async function renderPlaybook() {
@@ -679,7 +688,7 @@ const CALL_SCRIPT = `
 — Mi nombre es [TU NOMBRE], de Your LocalLift. Le llamo rapidito: busqué [NEGOCIO] en Google y me di cuenta de que [no tiene página web / casi no aparece]. Nosotros ayudamos justo a negocios como el suyo a conseguir más clientes por internet — todo en español. ¿Le puedo robar 30 segundos?
 
 [SI DICE QUE SÍ:]
-— Hacemos su página web, su perfil de Google y sus redes — todo por usted, desde $199 al mes y sin contratos. Y lo primero es GRATIS: le preparamos un plan por escrito para su negocio. Si le gusta, empezamos; si no, se queda con el plan sin pagar nada.
+— Le hacemos su página web como proyecto aparte — desde $499 una sola vez, y es suya para siempre. Y si quiere que le llevemos el marketing (Google, redes, anuncios), eso va desde $199 al mes, sin contratos. Lo primero es GRATIS: le preparamos un plan por escrito para su negocio. Si le gusta, empezamos; si no, se queda con el plan sin pagar nada.
 
 — ¿Le parece si le agendo una llamada de 20 minutos con mi socio? ¿Mejor mañana en la mañana o en la tarde?</div>
     <p class="small" style="color:var(--ink-muted)">Reglas de oro: sonríe al hablar (se escucha) · di el nombre de SU negocio en los primeros 10 segundos · la meta de la llamada es la CITA, no la venta · registra cada resultado aquí abajo apenas cuelgues.</p>
@@ -688,16 +697,16 @@ const CALL_SCRIPT = `
   <details style="margin:0.4rem 0"><summary style="cursor:pointer;font-weight:700">💬 Escenarios: qué decir en cada caso</summary>
     <div class="ad-card"><div class="platform">CONTESTA UN EMPLEADO</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¿A qué hora puedo encontrar al dueño? … Perfecto. ¿Le puede decir que llamó [TU NOMBRE] de Your LocalLift, sobre cómo conseguir más clientes? Le marco a esa hora. ¡Gracias!</p><p class="small" style="color:var(--ink-muted)">Apunta la hora aquí con estado "Llamar después".</p></div>
     <div class="ad-card"><div class="platform">"NO TENGO TIEMPO"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Lo entiendo perfecto — y justo por eso existimos: nosotros hacemos todo para que usted no le meta tiempo. Le mando la información por texto ahora mismo y le marco cuando usted diga. ¿Mejor mañana en la mañana o en la tarde?</p><p class="small" style="color:var(--ink-muted)">Siempre ofrece DOS opciones de horario, nunca preguntes "¿cuándo puede?".</p></div>
-    <div class="ad-card"><div class="platform">"¿CUÁNTO CUESTA?"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Desde $199 al mes todo incluido, y sin contrato de permanencia. Pero antes de cobrarle un solo centavo le hacemos un plan gratis por escrito para SU negocio. Usted lo ve con calma y decide. ¿Se lo mandamos?</p></div>
+    <div class="ad-card"><div class="platform">"¿CUÁNTO CUESTA?"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Depende de lo que necesite: la página web es un proyecto único desde $499 — la paga una vez y es suya. El marketing (Google, redes, anuncios) va desde $199 al mes sin contrato, y el hosting son $15 al mes. Pero antes de cobrarle un centavo le hacemos un plan gratis por escrito para SU negocio. ¿Se lo mandamos?</p></div>
     <div class="ad-card"><div class="platform">"YA TENGO QUIEN ME LO LLEVE" / "MI SOBRINO LO HACE"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¡Qué bueno que ya le están echando la mano! ¿Y está contento con los resultados? … Si algún día quiere una segunda opinión, el plan gratis no cuesta nada y no lo compromete a nada. Le dejo el dato: yourlocallift.com.</p></div>
     <div class="ad-card"><div class="platform">"NO ME INTERESA"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Claro, no hay problema. Solo le dejo la página por si algún día la ocupa: yourlocallift.com. ¡Que tenga buen día!</p><p class="small" style="color:var(--ink-muted)">Nunca insistas dos veces. Marca "No interesado" y a la siguiente llamada.</p></div>
     <div class="ad-card"><div class="platform">"MÁNDEME INFORMACIÓN"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Con mucho gusto. ¿Se la mando por texto a este mismo número?
 
 [TEXTO PARA ENVIAR:]
-Hola [NOMBRE], soy [TU NOMBRE] de Your LocalLift 👋 Ayudamos a negocios como [NEGOCIO] a conseguir más clientes: página web, Google y redes desde $199/mes, sin contratos. Su plan gratis por escrito: yourlocallift.com — también puede chatear ahí mismo con nosotros 24/7.</p></div>
+Hola [NOMBRE], soy [TU NOMBRE] de Your LocalLift 👋 Ayudamos a negocios como [NEGOCIO] a conseguir más clientes: página web desde $499 (pago único) y marketing desde $199/mes, sin contratos. Su plan gratis por escrito: yourlocallift.com — también puede chatear ahí mismo con nosotros 24/7.</p></div>
     <div class="ad-card"><div class="platform">BUZÓN DE VOZ (15 SEGUNDOS)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Buenos días, soy [TU NOMBRE] de Your LocalLift. Busqué [NEGOCIO] en Google y tengo un par de ideas para que le lleguen más clientes — sin costo, sin compromiso. Le marco más tarde, o me encuentra en yourlocallift.com. ¡Buen día!</p></div>
     <div class="ad-card"><div class="platform">ESTÁ INTERESADO → CIERRA LA CITA</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¡Perfecto! Le agendo una llamada de 20 minutos, gratis y sin compromiso, para conocer su negocio y prepararle su plan. ¿Mañana a las 10 o mejor a las 4? … Listo, le mando la confirmación por texto. ¡Hasta mañana!</p><p class="small" style="color:var(--ink-muted)">Marca "Cita agendada" y usa el botón → Lead para pasarlo al embudo.</p></div>
-    <div class="ad-card"><div class="platform">ENGLISH OPENER (QUICK)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Hi, am I speaking with the owner of [BUSINESS]? My name is [NAME] with Your LocalLift. Quick call: I looked up [BUSINESS] on Google and noticed you don't have a website. We help businesses like yours get more customers online — websites, Google, social media, from $199/month, no contracts. The first step is a free written plan. Could I set up a 20-minute call — tomorrow morning or afternoon?</p></div>
+    <div class="ad-card"><div class="platform">ENGLISH OPENER (QUICK)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Hi, am I speaking with the owner of [BUSINESS]? My name is [NAME] with Your LocalLift. Quick call: I looked up [BUSINESS] on Google and noticed you don't have a website. We help businesses like yours get more customers online — websites from $499 one-time, and marketing (Google, social, ads) from $199/month, no contracts. The first step is a free written plan. Could I set up a 20-minute call — tomorrow morning or afternoon?</p></div>
   </details>
 
   <details style="margin:0.4rem 0"><summary style="cursor:pointer;font-weight:700">🔍 Dónde encontrar prospectos (el método)</summary>

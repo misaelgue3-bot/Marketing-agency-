@@ -103,6 +103,40 @@ function handleStripeEvent(event) {
     return;
   }
 
+  // One-time payment: a website project (separate from the marketing plans)
+  if (event.type === 'checkout.session.completed' && obj.mode === 'payment') {
+    const md = obj.metadata || {};
+    const email = (obj.customer_details && obj.customer_details.email) || obj.customer_email || '';
+    const amount = (obj.amount_total || 0) / 100;
+    const planLabel = md.plan === 'WebPro' || md.plan === 'WebsitePro' ? 'Sitio web completo' : 'Página web';
+
+    let client = findClientByStripe(obj.customer, email);
+    if (!client) {
+      client = store.addClient({
+        name: md.name || (obj.customer_details && obj.customer_details.name) || 'Cliente Stripe',
+        business: md.business || '',
+        email,
+        phone: md.phone || '',
+        plan: planLabel,
+        monthlyFee: 0,
+        status: 'active',
+        notes: `Proyecto web pagado ($${amount}). Hosting mensual aparte pendiente de configurar.`,
+      });
+    }
+    if (obj.customer) { client.stripeCustomerId = obj.customer; }
+    if (md.leadId) {
+      const lead = store.db.leads.find((l) => l.id === md.leadId);
+      if (lead) lead.status = 'converted';
+    }
+    store.persist();
+
+    store.addPayment({ clientId: client.id, amount, method: 'stripe', note: `${planLabel} — pago único (Stripe)` });
+    const who = client.business || client.name;
+    telegram.notifyOwner(`🎉 ¡Proyecto web pagado! ${who} — ${planLabel}, $${amount} (pago único).\nRecuerda: el hosting ($${store.db.settings.priceHosting || 15}/mes) se cobra aparte.`).catch(() => {});
+    console.log(`[stripe] one-time web project paid: ${who} — $${amount}`);
+    return;
+  }
+
   // Monthly renewals (the first invoice is covered by checkout.session.completed)
   if (event.type === 'invoice.paid' && obj.billing_reason === 'subscription_cycle') {
     const amount = (obj.amount_paid || 0) / 100;
@@ -141,6 +175,9 @@ function renderPage(file) {
     .replaceAll('{{PRICE_1}}', s.price1)
     .replaceAll('{{PRICE_2}}', s.price2)
     .replaceAll('{{PRICE_3}}', s.price3)
+    .replaceAll('{{PRICE_WEB1}}', s.priceWeb1 || 499)
+    .replaceAll('{{PRICE_WEB2}}', s.priceWeb2 || 899)
+    .replaceAll('{{PRICE_HOST}}', s.priceHosting || 15)
     .replaceAll('{{STRIPE_ON}}', stripePay.available() ? '1' : '0');
 }
 
@@ -386,29 +423,38 @@ app.post('/api/pay', async (req, res) => {
     Crecimiento: s.price2, Growth: s.price2,
     Pro: s.price3,
   };
+  // One-time website projects — separate from the monthly marketing plans
+  const WEB_AMOUNTS = {
+    Web: { amount: s.priceWeb1 || 499, product: 'Página web (una página) — Your LocalLift' },
+    Website: { amount: s.priceWeb1 || 499, product: 'One-page website — Your LocalLift' },
+    WebPro: { amount: s.priceWeb2 || 899, product: 'Sitio web completo — Your LocalLift' },
+    WebsitePro: { amount: s.priceWeb2 || 899, product: 'Full website — Your LocalLift' },
+  };
   const plan = String(b.plan || '');
   const amount = PLAN_AMOUNTS[plan];
-  if (!amount) return res.status(400).json({ error: 'Unknown plan' });
+  const webTier = WEB_AMOUNTS[plan];
+  if (!amount && !webTier) return res.status(400).json({ error: 'Unknown plan' });
 
   const clean = (v, max) => String(v || '').trim().slice(0, max);
   const base = (process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
   const page = b.lang === 'en' ? 'checkout-en.html' : 'checkout.html';
+  const metadata = {
+    plan,
+    name: clean(b.name, 100),
+    business: clean(b.business, 120),
+    phone: clean(b.phone, 40),
+    leadId: clean(b.leadId, 40),
+  };
+  const urls = {
+    successUrl: `${base}/${page}?paid=1&plan=${encodeURIComponent(plan)}`,
+    cancelUrl: `${base}/${page}?plan=${encodeURIComponent(plan)}&cancelled=1`,
+  };
+  const customerEmail = EMAIL_RE.test(String(b.email || '')) ? clean(b.email, 150) : undefined;
 
   try {
-    const session = await stripePay.createSubscriptionCheckout({
-      plan,
-      amountUsd: amount,
-      customerEmail: EMAIL_RE.test(String(b.email || '')) ? clean(b.email, 150) : undefined,
-      metadata: {
-        plan,
-        name: clean(b.name, 100),
-        business: clean(b.business, 120),
-        phone: clean(b.phone, 40),
-        leadId: clean(b.leadId, 40),
-      },
-      successUrl: `${base}/${page}?paid=1&plan=${encodeURIComponent(plan)}`,
-      cancelUrl: `${base}/${page}?plan=${encodeURIComponent(plan)}&cancelled=1`,
-    });
+    const session = webTier
+      ? await stripePay.createOneTimeCheckout({ productName: webTier.product, amountUsd: webTier.amount, customerEmail, metadata, ...urls })
+      : await stripePay.createSubscriptionCheckout({ plan, amountUsd: amount, customerEmail, metadata, ...urls });
     res.json({ url: session.url });
   } catch (err) {
     console.error('[stripe] checkout session failed:', err.message);

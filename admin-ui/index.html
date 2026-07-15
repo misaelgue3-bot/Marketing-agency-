@@ -682,39 +682,66 @@ const PSTATUS = {
 const PCATS = ['Restaurante / comida', 'Panadería', 'Salón / barbería', 'Taller mecánico', 'Limpieza', 'Jardinería', 'Construcción', 'Tienda', 'Otro'];
 
 const CALL_SCRIPT = `
-  <details style="margin:0.4rem 0"><summary style="cursor:pointer;font-weight:700">📖 Guión de apertura (los primeros 30 segundos)</summary>
-    <div class="ad-card" style="white-space:pre-wrap">— Buenos días, ¿hablo con el dueño o la dueña de [NEGOCIO]?
+  <details style="margin:0.4rem 0" open><summary style="cursor:pointer;font-weight:700">🇲🇽 Guión completo — ESPAÑOL</summary>
+
+    <div class="ad-card"><div class="platform">APERTURA (LOS PRIMEROS 30 SEGUNDOS)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Buenos días, ¿hablo con el dueño o la dueña de [NEGOCIO]?
 
 — Mi nombre es [TU NOMBRE], de Your LocalLift. Le llamo rapidito: busqué [NEGOCIO] en Google y me di cuenta de que [no tiene página web / casi no aparece]. Nosotros ayudamos justo a negocios como el suyo a conseguir más clientes por internet — todo en español. ¿Le puedo robar 30 segundos?
 
 [SI DICE QUE SÍ:]
 — Le hacemos su página web como proyecto aparte — desde $499 una sola vez, y es suya para siempre. Y si quiere que le llevemos el marketing (Google, redes, anuncios), eso va desde $199 al mes, sin contratos. Lo primero es GRATIS: le preparamos un plan por escrito para su negocio. Si le gusta, empezamos; si no, se queda con el plan sin pagar nada.
 
-— ¿Le parece si le agendo una llamada de 20 minutos con mi socio? ¿Mejor mañana en la mañana o en la tarde?</div>
-    <p class="small" style="color:var(--ink-muted)">Reglas de oro: sonríe al hablar (se escucha) · di el nombre de SU negocio en los primeros 10 segundos · la meta de la llamada es la CITA, no la venta · registra cada resultado aquí abajo apenas cuelgues.</p>
-  </details>
+— ¿Le parece si le agendo una llamada de 20 minutos con mi socio? ¿Mejor mañana en la mañana o en la tarde?</p></div>
 
-  <details style="margin:0.4rem 0"><summary style="cursor:pointer;font-weight:700">💬 Escenarios: qué decir en cada caso</summary>
-    <div class="ad-card"><div class="platform">CONTESTA UN EMPLEADO</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¿A qué hora puedo encontrar al dueño? … Perfecto. ¿Le puede decir que llamó [TU NOMBRE] de Your LocalLift, sobre cómo conseguir más clientes? Le marco a esa hora. ¡Gracias!</p><p class="small" style="color:var(--ink-muted)">Apunta la hora aquí con estado "Llamar después".</p></div>
-    <div class="ad-card"><div class="platform">"NO TENGO TIEMPO"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Lo entiendo perfecto — y justo por eso existimos: nosotros hacemos todo para que usted no le meta tiempo. Le mando la información por texto ahora mismo y le marco cuando usted diga. ¿Mejor mañana en la mañana o en la tarde?</p><p class="small" style="color:var(--ink-muted)">Siempre ofrece DOS opciones de horario, nunca preguntes "¿cuándo puede?".</p></div>
+    <div class="ad-card"><div class="platform">CONTESTA UN EMPLEADO</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¿A qué hora puedo encontrar al dueño? … Perfecto. ¿Le puede decir que llamó [TU NOMBRE] de Your LocalLift, sobre cómo conseguir más clientes? Le marco a esa hora. ¡Gracias!</p><p class="small" style="color:var(--ink-muted)">Apunta la hora con estado "Llamar después".</p></div>
+    <div class="ad-card"><div class="platform">"NO TENGO TIEMPO"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Lo entiendo perfecto — y justo por eso existimos: nosotros hacemos todo para que usted no le meta tiempo. Le mando la información por texto ahora mismo y le marco cuando usted diga. ¿Mejor mañana en la mañana o en la tarde?</p><p class="small" style="color:var(--ink-muted)">Siempre DOS opciones de horario, nunca "¿cuándo puede?".</p></div>
     <div class="ad-card"><div class="platform">"¿CUÁNTO CUESTA?"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Depende de lo que necesite: la página web es un proyecto único desde $499 — la paga una vez y es suya. El marketing (Google, redes, anuncios) va desde $199 al mes sin contrato, y el hosting son $15 al mes. Pero antes de cobrarle un centavo le hacemos un plan gratis por escrito para SU negocio. ¿Se lo mandamos?</p></div>
     <div class="ad-card"><div class="platform">"YA TENGO QUIEN ME LO LLEVE" / "MI SOBRINO LO HACE"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¡Qué bueno que ya le están echando la mano! ¿Y está contento con los resultados? … Si algún día quiere una segunda opinión, el plan gratis no cuesta nada y no lo compromete a nada. Le dejo el dato: yourlocallift.com.</p></div>
-    <div class="ad-card"><div class="platform">"NO ME INTERESA"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Claro, no hay problema. Solo le dejo la página por si algún día la ocupa: yourlocallift.com. ¡Que tenga buen día!</p><p class="small" style="color:var(--ink-muted)">Nunca insistas dos veces. Marca "No interesado" y a la siguiente llamada.</p></div>
+    <div class="ad-card"><div class="platform">"NO ME INTERESA"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Claro, no hay problema. Solo le dejo la página por si algún día la ocupa: yourlocallift.com. ¡Que tenga buen día!</p><p class="small" style="color:var(--ink-muted)">Nunca insistas dos veces. Marca "No interesado" y a la siguiente.</p></div>
     <div class="ad-card"><div class="platform">"MÁNDEME INFORMACIÓN"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Con mucho gusto. ¿Se la mando por texto a este mismo número?
 
 [TEXTO PARA ENVIAR:]
 Hola [NOMBRE], soy [TU NOMBRE] de Your LocalLift 👋 Ayudamos a negocios como [NEGOCIO] a conseguir más clientes: página web desde $499 (pago único) y marketing desde $199/mes, sin contratos. Su plan gratis por escrito: yourlocallift.com — también puede chatear ahí mismo con nosotros 24/7.</p></div>
     <div class="ad-card"><div class="platform">BUZÓN DE VOZ (15 SEGUNDOS)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Buenos días, soy [TU NOMBRE] de Your LocalLift. Busqué [NEGOCIO] en Google y tengo un par de ideas para que le lleguen más clientes — sin costo, sin compromiso. Le marco más tarde, o me encuentra en yourlocallift.com. ¡Buen día!</p></div>
-    <div class="ad-card"><div class="platform">ESTÁ INTERESADO → CIERRA LA CITA</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¡Perfecto! Le agendo una llamada de 20 minutos, gratis y sin compromiso, para conocer su negocio y prepararle su plan. ¿Mañana a las 10 o mejor a las 4? … Listo, le mando la confirmación por texto. ¡Hasta mañana!</p><p class="small" style="color:var(--ink-muted)">Marca "Cita agendada" y usa el botón → Lead para pasarlo al embudo.</p></div>
-    <div class="ad-card"><div class="platform">ENGLISH OPENER (QUICK)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Hi, am I speaking with the owner of [BUSINESS]? My name is [NAME] with Your LocalLift. Quick call: I looked up [BUSINESS] on Google and noticed you don't have a website. We help businesses like yours get more customers online — websites from $499 one-time, and marketing (Google, social, ads) from $199/month, no contracts. The first step is a free written plan. Could I set up a 20-minute call — tomorrow morning or afternoon?</p></div>
+    <div class="ad-card"><div class="platform">ESTÁ INTERESADO → CIERRA LA CITA</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¡Perfecto! Le agendo una llamada de 20 minutos, gratis y sin compromiso, para conocer su negocio y prepararle su plan. ¿Mañana a las 10 o mejor a las 4? … Listo, le mando la confirmación por texto. ¡Hasta mañana!</p><p class="small" style="color:var(--ink-muted)">Marca "Cita agendada" y usa → Lead para pasarlo al embudo.</p></div>
+    <p class="small" style="color:var(--ink-muted)">Reglas de oro: sonríe al hablar (se escucha) · di el nombre de SU negocio en los primeros 10 segundos · la meta es la CITA, no la venta · registra cada llamada apenas cuelgues.</p>
   </details>
 
-  <details style="margin:0.4rem 0"><summary style="cursor:pointer;font-weight:700">🔍 Dónde encontrar prospectos (el método)</summary>
-    <div class="ad-card"><p style="margin:0.2rem 0"><strong>1 · Google Maps (la mina de oro).</strong> Busca "[giro] + [tu ciudad]": taquería, panadería, salón, taller, limpieza… Abre cada ficha y busca las señales: <strong>sin sitio web</strong> en la ficha, menos de 10 reseñas, sin horarios, fotos viejas o de clientes. Ese negocio existe, vende, y nadie lo está ayudando. Apunta nombre y teléfono aquí.</p>
-    <p style="margin:0.6rem 0 0.2rem"><strong>2 · Facebook.</strong> Negocios que publican en grupos locales de compra/venta pero no tienen página propia — o tienen página de Facebook sin sitio web. Ya saben que necesitan internet; nadie les ha armado la casa.</p>
-    <p style="margin:0.6rem 0 0.2rem"><strong>3 · La calle.</strong> Negocio lleno de gente que conoces — búscalo en Google en ese momento. Si no aparece o no tiene web, a la lista.</p>
-    <p style="margin:0.6rem 0 0.2rem"><strong>4 · Yelp y Nextdoor.</strong> Fichas activas sin sitio web ni respuesta a reseñas.</p>
-    <p style="margin:0.6rem 0 0.2rem;color:var(--ink-muted)" class="small">Meta diaria realista: 20 prospectos apuntados ≈ 10-14 contestadas ≈ 1-2 citas. Es un juego de números — el guión hace el resto.</p></div>
+  <details style="margin:0.4rem 0"><summary style="cursor:pointer;font-weight:700">🇺🇸 Full script — ENGLISH</summary>
+
+    <div class="ad-card"><div class="platform">OPENING (THE FIRST 30 SECONDS)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Good morning, am I speaking with the owner of [BUSINESS]?
+
+— My name is [YOUR NAME], with Your LocalLift. Quick call: I looked up [BUSINESS] on Google and noticed you [don't have a website / barely show up]. We help businesses just like yours get more customers online. Can I take 30 seconds?
+
+[IF THEY SAY YES:]
+— We build your website as a one-time project — from $499, paid once, and it's yours forever. And if you'd like us to run your marketing (Google, social media, ads), that starts at $199 a month, no contracts. The first step is FREE: a written plan for your business. If you like it, we start; if not, you keep the plan and pay nothing.
+
+— How about I set up a 20-minute call with my partner? Is tomorrow morning better, or the afternoon?</p></div>
+
+    <div class="ad-card"><div class="platform">AN EMPLOYEE ANSWERS</div><p style="white-space:pre-wrap;margin:0.3rem 0">— What time can I catch the owner? … Perfect. Could you tell them [YOUR NAME] from Your LocalLift called, about getting more customers? I'll call back then. Thank you!</p><p class="small" style="color:var(--ink-muted)">Log the time with status "Llamar después".</p></div>
+    <div class="ad-card"><div class="platform">"I DON'T HAVE TIME"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— I completely understand — and that's exactly why we exist: we do everything so you don't spend a minute on it. I'll text you the info right now and call back whenever you say. Tomorrow morning or afternoon?</p><p class="small" style="color:var(--ink-muted)">Always offer TWO time options, never "when works for you?".</p></div>
+    <div class="ad-card"><div class="platform">"HOW MUCH IS IT?"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— It depends on what you need: the website is a one-time project from $499 — you pay once and it's yours. Marketing (Google, social, ads) starts at $199/month with no contract, and hosting is $15/month. But before we charge you a cent, we make you a free written plan for YOUR business. Want me to send it?</p></div>
+    <div class="ad-card"><div class="platform">"I ALREADY HAVE SOMEONE" / "MY NEPHEW DOES IT"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— That's great that someone's helping you! Are you happy with the results? … If you ever want a second opinion, the free plan costs nothing and commits you to nothing. Here's the site: yourlocallift.com.</p></div>
+    <div class="ad-card"><div class="platform">"NOT INTERESTED"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— No problem at all. I'll just leave you the site in case you ever need it: yourlocallift.com. Have a great day!</p><p class="small" style="color:var(--ink-muted)">Never push twice. Mark "No interesado" and move on.</p></div>
+    <div class="ad-card"><div class="platform">"SEND ME SOME INFO"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Happy to. Can I text it to this number?
+
+[TEXT TO SEND:]
+Hi [NAME], this is [YOUR NAME] from Your LocalLift 👋 We help businesses like [BUSINESS] get more customers: websites from $499 one-time and marketing from $199/mo, no contracts. Your free written plan: yourlocallift.com — you can also chat with us there 24/7.</p></div>
+    <div class="ad-card"><div class="platform">VOICEMAIL (15 SECONDS)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Good morning, this is [YOUR NAME] from Your LocalLift. I looked up [BUSINESS] on Google and I have a couple of ideas to bring you more customers — free, no strings attached. I'll try you later, or find me at yourlocallift.com. Have a great day!</p></div>
+    <div class="ad-card"><div class="platform">THEY'RE INTERESTED → CLOSE THE APPOINTMENT</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Perfect! I'll set up a free, no-commitment 20-minute call to learn about your business and prepare your plan. Tomorrow at 10, or is 4 better? … Done, I'll text you the confirmation. Talk tomorrow!</p><p class="small" style="color:var(--ink-muted)">Mark "Cita agendada" and use → Lead to move them into the funnel.</p></div>
+    <p class="small" style="color:var(--ink-muted)">Golden rules: smile while you talk (they can hear it) · say THEIR business name in the first 10 seconds · the goal is the APPOINTMENT, not the sale · log every call the moment you hang up.</p>
+  </details>
+
+  <details style="margin:0.4rem 0"><summary style="cursor:pointer;font-weight:700">🔍 Dónde encontrar prospectos — a mano y automático (Apify)</summary>
+    <div class="ad-card"><p style="margin:0.2rem 0"><strong>A mano · Google Maps (gratis).</strong> Busca "[giro] + [tu ciudad]": taquería, panadería, salón, taller, limpieza… Abre cada ficha y busca las señales de oro: <strong>sin sitio web</strong>, menos de 10 reseñas, sin horarios, fotos viejas. Apunta nombre y teléfono aquí (o usa "Importar lista" abajo).</p>
+    <p style="margin:0.7rem 0 0.2rem"><strong>Automático · Apify (la máquina de prospectos).</strong> En <strong>apify.com</strong> crea una cuenta gratis (incluye $5 de uso al mes — alcanza para cientos de negocios):</p>
+    <p style="margin:0.3rem 0 0.2rem">1 · Busca el actor <strong>"Google Maps Scraper"</strong> (compass/crawler-google-places).<br>
+    2 · Search term: <em>"restaurantes"</em> (o salones, talleres…) · Location: <em>tu ciudad</em> · Number of places: 100.<br>
+    3 · Corre el actor y exporta el resultado como <strong>CSV</strong>.<br>
+    4 · En la hoja, filtra las filas donde la columna <strong>website esté VACÍA</strong> — esos son tus prospectos de oro. También sirve: <em>reviewsCount</em> &lt; 10.<br>
+    5 · Copia las columnas nombre | teléfono | ciudad y pégalas en <strong>"Importar lista"</strong> aquí abajo. Listo: cola de llamadas para la semana.</p>
+    <p style="margin:0.6rem 0 0.2rem"><strong>También:</strong> Facebook (negocios que publican en grupos locales sin página propia) · Yelp/Nextdoor (fichas sin web) · la calle (negocio lleno → búscalo en Google en el momento).</p>
+    <p style="margin:0.6rem 0 0.2rem;color:var(--ink-muted)" class="small">Meta diaria: 20 prospectos ≈ 10-14 contestadas ≈ 1-2 citas. Es un juego de números — el guión hace el resto.</p></div>
   </details>
 `;
 
@@ -744,6 +771,14 @@ async function renderProspects() {
         <label>¿Google Business?<select name="google"><option value="no">No aparece</option><option value="incompleto">Incompleto</option><option value="si">Completo</option></select></label>
         <label class="full">Notas<input name="notes" placeholder="Ej. lleno los fines de semana, sin reseñas nuevas desde 2024…"></label>
         <div><button class="btn btn-primary">Agregar</button></div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>📥 Importar lista (de Apify o Google Maps)</h3></div>
+      <form id="prospect-bulk">
+        <textarea name="text" rows="4" placeholder="Una línea por negocio:  Negocio | Teléfono | Ciudad | Giro&#10;Tacos El Güero | 832 555 0123 | Houston, TX | Restaurante&#10;(también sirve pegar columnas copiadas de Excel/CSV separadas por tabulador)"></textarea>
+        <div style="margin-top:0.6rem"><button class="btn btn-primary">Importar prospectos</button></div>
       </form>
     </div>
 
@@ -841,6 +876,7 @@ main.addEventListener('submit', async (e) => {
   try {
     if (e.target.id === 'client-form') { await api('/clients', { method: 'POST', body }); toast('Client added'); renderClients(); }
     if (e.target.id === 'prospect-form') { await api('/prospects', { method: 'POST', body }); toast('Prospecto agregado 📞'); renderProspects(); }
+    if (e.target.id === 'prospect-bulk') { const r = await api('/prospects/bulk', { method: 'POST', body }); toast(r.added + ' prospectos importados 📥'); renderProspects(); }
     if (e.target.id === 'payment-form') { await api('/payments', { method: 'POST', body }); toast('Payment recorded 💸'); renderPayments(); }
     if (e.target.id === 'settings-form') { await api('/settings', { method: 'PATCH', body }); toast('Saved — your live site is updated ✨'); renderSettings(); }
   } catch (err) { alert(err.message); }

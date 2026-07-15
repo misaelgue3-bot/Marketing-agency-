@@ -759,6 +759,22 @@ admin.post('/prospects', (req, res) => {
   res.json(store.addProspect(b));
 });
 
+// Bulk import: one prospect per line — "Business | Phone | City | Category | Notes"
+// (also accepts tab- or comma-separated columns pasted from Excel/CSV)
+admin.post('/prospects/bulk', (req, res) => {
+  const text = String((req.body || {}).text || '');
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean).slice(0, 300);
+  let added = 0;
+  for (const line of lines) {
+    const parts = line.includes('|') ? line.split('|') : line.includes('\t') ? line.split('\t') : line.split(',');
+    const [business, phone, city, category, ...rest] = parts.map((p) => p.trim());
+    if (!business || business.length < 3) continue;
+    store.addProspect({ business, phone, city, category, notes: rest.join(', ') });
+    added++;
+  }
+  res.json({ added });
+});
+
 admin.patch('/prospects/:id', (req, res) => {
   const p = store.updateProspect(req.params.id, req.body || {});
   if (!p) return res.status(404).json({ error: 'Prospect not found' });

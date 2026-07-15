@@ -619,6 +619,11 @@ app.get('/admin', requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-ui', 'index.html'));
 });
 
+// Internal marketing studio: the 2D animated ad spots (recordable to video)
+app.get('/admin/animaciones', requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-ui', 'animaciones.html'));
+});
+
 /* ============================================================
  * Admin API
  * ============================================================ */

@@ -158,6 +158,7 @@
     <div class="side-logo">Local<span>Lift</span><small>Panel de control</small></div>
     <nav id="nav">
       <button data-tab="dashboard" class="on"><span class="ico">📊</span> Dashboard</button>
+      <button data-tab="playbook"><span class="ico">📣</span> Mi Campaña</button>
       <button data-tab="leads"><span class="ico">📥</span> Leads</button>
       <button data-tab="clients"><span class="ico">👥</span> Clients</button>
       <button data-tab="payments"><span class="ico">💵</span> Payments</button>
@@ -555,6 +556,113 @@ async function renderSettings() {
     </div>`;
 }
 
+/* ================= Mi Campaña (playbook) ================= */
+
+const PB_ADS = [
+  { tag: 'AD 1 · EL SÍNTOMA', vis: 'Foto cálida de un negocio local lleno (o el Spot 2D #1).',
+    es: 'Tu comida es la mejor de la ciudad. ¿Entonces por qué tu competencia está más llena?\n\nNo es la sazón — es que a ellos sí los encuentran en Google.\n\nNosotros te ponemos ahí: página web, perfil de Google y redes, todo hecho por ti, en tu idioma, desde $199 al mes. Sin contratos que amarran.\n\nPide tu plan gratis — te lo mandamos por escrito en 48 horas. 🌮\n\nTitular: Marketing en tu idioma — desde $199/mes\nCTA: Más información → yourlocallift.com',
+    en: "Your food is the best in town. So why is the competition busier? It's not the cooking — it's that Google finds them first. Website, Google profile and social media, done for you, from $199/mo. Get your free plan — in writing, within 48 hours." },
+  { tag: 'AD 2 · LA CUENTA CLARA', vis: 'Tu gráfica de crecimiento (o el Spot 2D #2).',
+    es: '¿Cuánto te cuesta un empleado por día? ¿$120? ¿$150?\n\nPor menos de $7 al día tienes un equipo completo de marketing: tu página web, tu perfil de Google optimizado y tus redes publicando solas — mientras tú atiendes tu negocio.\n\nPrecios fijos, en tu idioma, y el primer plan es gratis y por escrito. Tú decides con calma.\n\nTitular: Un equipo de marketing por menos de $7/día\nCTA: Cotizar gratis → yourlocallift.com',
+    en: 'What does one employee cost you per day? $120? For less than $7/day you get a full marketing team: website, optimized Google profile and social media on autopilot. Flat prices. Your first plan is free, in writing.' },
+  { tag: 'AD 3 · LA PRUEBA', vis: 'Captura real de culichitowns.com en un teléfono (pide permiso al cliente).',
+    es: 'Así se ve una marca hecha con cariño: mira el sitio que construimos para Culichi Town, mariscos estilo Sinaloa con 8 sucursales. 🍅\n\nMenú, historia y localizador de sucursales — todo en un sitio que se siente como el restaurante.\n\nTu negocio también merece verse así de profesional. Logo, colores, web y redes — desde $199 al mes, sin contratos.\n\nTitular: Marcas que se notan — mira nuestro trabajo\nCTA: Ver más → yourlocallift.com',
+    en: 'This is what a brand built with care looks like: see the site we built for Culichi Town — Sinaloa-style seafood with 8 locations. Your business deserves to look this professional. From $199/mo, no contracts.' },
+];
+
+const PB_PROMPTS = [
+  { name: '🎬 El letrero se enciende (9:16 · 8s) — anuncio principal', overlay: '"¿Marca pequeña y sin ventas? Nos encanta ayudar." → "Que tu negocio se note."',
+    p: 'Aspect: 9:16 | Duration: 8s | Style: cinematic commercial, photoreal\n\nShot 1 (0-3s): Locked-off static camera on a small family storefront at dusk, its sign a dark unlit shape, street empty, cold blue-grey shadows, wet pavement.\n\nShot 2 (3-8s): The sign flickers twice, then glows warm gold — light spills across the sidewalk, two passersby stop and turn toward the window. Camera: slow Dolly In toward the glowing sign. Warm terracotta-and-gold color grade, single practical light source, sign is a simple glowing shape with no readable text.' },
+  { name: '🎬 De vacío a lleno (1:1 · 8s) — feed', overlay: '"Así se ve cuando te encuentran en Google."',
+    p: 'Aspect: 1:1 | Duration: 8s | Style: photoreal commercial time-lapse\n\nLocked-off static camera inside a small Mexican taquería, one fixed frame. Time-lapse: morning light sweeps across the room as tables fill one by one — families appear, plates land on tables, steam rises from the kitchen pass, a waiter crosses the frame in fast motion. By the final second every table is full. Golden-hour glow through the front windows, warm terracotta tones, faces natural and stable.' },
+  { name: '🎬 El teléfono no para (9:16 · 8s) — retargeting', overlay: '"Más llamadas. Más clientes. Desde $199/mes."',
+    p: 'Aspect: 9:16 | Duration: 8s | Style: cinematic commercial, shallow depth of field\n\nMacro close-up: a smartphone lies face-up on a worn wooden restaurant counter beside fresh limes and cilantro. Shot 1 (0-2s): still frame, quiet. Shot 2 (2-8s): the screen lights up and the phone buzzes, sliding a few millimeters with each vibration, again and again; in the soft-focus background the owner wipes his hands on his apron and straightens up. Camera: slow Dolly In on the phone. Warm kitchen practical lights, terracotta tones, screen shows an abstract glow with no readable text.' },
+  { name: '🎬 La gráfica viva (1:1 · 6s) — feed', overlay: '"Mes 1 → Mes 6 con nosotros."',
+    p: 'Aspect: 1:1 | Duration: 6s | Style: premium 3D motion graphics\n\nDark teal-charcoal studio background with soft rim light and floating dust particles. Seven rounded golden 3D bars rise one by one from left to right, each taller than the last, each settling with a soft elastic bounce. The final bar rises tallest and ignites bright orange, scattering small sparks. Apply the Glow Trace preset as the last bar rises, leaving a luminous trail. Camera: slow 360 Orbit around the chart.' },
+  { name: '🎬 La marca florece (9:16 · 10s) — identidad de marca', overlay: '"Tu negocio ya trabaja duro. Nosotros hacemos que se note."',
+    p: 'Aspect: 9:16 | Duration: 10s | Style: stop-motion craft aesthetic, macro lens\n\nShot 1 (0-4s): A plain grey folded cardboard model of a storefront sits on a wooden workbench, single soft key light from the left, visible cardboard texture.\n\nShot 2 (4-10s): The model unfolds like origami — walls rise, a striped awning rolls open, papel picado banners in terracotta, gold and teal unfurl above it, tiny warm bulbs flick on one by one along the roofline. Camera: slow Crane Up from table level to a gentle high angle. Handmade textures, no readable lettering anywhere.' },
+];
+
+const PB_GOOGLE = {
+  titulares: 'Página web para tu negocio · Desde $199 al mes, todo incluido · Marketing en tu idioma · Sin contratos que amarran · Tu plan gratis en 48 horas · Web + Google + redes, hecho por ti · Precios fijos y claros · Marcas y marketing para negocios latinos · Sal primero en Google · Atendemos en español e inglés',
+  descripciones: 'Web, perfil de Google y redes sociales hechas por ti, a precio fijo. Pide tu plan gratis. | Tu negocio trabaja duro. Que se note. Plan por escrito en 48 horas, sin compromiso. | Sin contratos de permanencia. Tu dominio y tus cuentas siempre son tuyos. | Precios desde $199/mes. Atención en español e inglés. Chatea con Sofía 24/7.',
+};
+
+async function renderPlaybook() {
+  window._pbCopy = [];
+  const reg = (txt) => (window._pbCopy.push(txt), window._pbCopy.length - 1);
+  const pre = (txt) => `<pre style="white-space:pre-wrap;font-size:0.84rem;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:0.8rem 1rem;margin:0.5rem 0">${esc(txt)}</pre>`;
+  const copyBtn = (txt, label) => `<button class="btn btn-ghost btn-sm" data-pcopy="${reg(txt)}">${label || '📋 Copiar'}</button>`;
+
+  main.innerHTML = `
+    <h2>📣 Mi Campaña — Your LocalLift</h2>
+    <div class="notice ok">Todo lo que necesitas para anunciar tu agencia: textos listos, prompts de video, tus animaciones 2D y el plan de 4 semanas. Presupuesto sugerido: <strong>$10/día</strong> ($6 Meta + $4 Google) → 20–40 solicitudes/mes.</div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>🎬 Tus animaciones 2D (8 spots)</h3><a class="btn btn-primary" href="/admin/animaciones" target="_blank" rel="noopener">Abrir estudio de animaciones ↗</a></div>
+      <p style="color:var(--ink-soft);font-size:0.9rem;margin:0">Ocho anuncios animados en tu estilo de marca. Ábrelos en Chrome de computadora y presiona <strong>⬇ Grabar video (8s)</strong> en cada uno — descarga un .webm listo para Meta (si te pide MP4, conviértelo gratis en CapCut).</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>📱 Anuncios para Meta (Facebook + Instagram)</h3></div>
+      <p style="color:var(--ink-soft);font-size:0.9rem">Lanza los 3 a la vez en un conjunto ($6/día, tu ciudad + 40 km, 25–55 años, español + inglés, ubicaciones automáticas). En la semana 2, deja solo el ganador.</p>
+      ${PB_ADS.map((a) => `
+        <div class="ad-card">
+          <div class="platform">${esc(a.tag)}</div>
+          ${pre(a.es)}
+          <p class="small" style="color:var(--ink-muted);margin:0.3rem 0"><em>EN: ${esc(a.en)}</em></p>
+          <p class="small" style="color:var(--ink-muted);margin:0.3rem 0">🎨 Visual: ${esc(a.vis)}</p>
+          ${copyBtn(a.es, '📋 Copiar ES')} ${copyBtn(a.en, '📋 Copiar EN')}
+        </div>`).join('')}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>🔎 Google Ads (Búsqueda · $4/día)</h3></div>
+      <div class="table-wrap"><table>
+        <tr><th>Grupo</th><th>Palabras clave (concordancia de frase)</th></tr>
+        <tr><td><strong>Páginas web</strong></td><td>"página web para mi negocio" · "diseño de página web precio" · "quién hace páginas web" · "página web para restaurante"</td></tr>
+        <tr><td><strong>Marketing local</strong></td><td>"marketing para pequeños negocios" · "publicidad para mi negocio" · "cómo aparecer en google mi negocio" · "agencia de marketing en español"</td></tr>
+        <tr><td><strong>English</strong></td><td>"website for my small business" · "local marketing agency" · "google business profile help" · "spanish speaking marketing agency"</td></tr>
+        <tr><td><strong>Negativas</strong></td><td>gratis · empleo · trabajo · curso · plantilla · wix · godaddy</td></tr>
+      </table></div>
+      <p style="margin:0.6rem 0 0.2rem"><strong>Titulares</strong> (pega 8–10 en el anuncio adaptable): ${copyBtn(PB_GOOGLE.titulares)}</p>
+      ${pre(PB_GOOGLE.titulares)}
+      <p style="margin:0.6rem 0 0.2rem"><strong>Descripciones</strong> (las 4): ${copyBtn(PB_GOOGLE.descripciones)}</p>
+      ${pre(PB_GOOGLE.descripciones)}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>🎥 Prompts de video con IA (Higgsfield / Runway / Pika)</h3></div>
+      <p style="color:var(--ink-soft);font-size:0.9rem">Reglas: un solo movimiento de cámara por toma · 50–80 palabras · nada de texto dentro del video (las letras se ponen después en CapCut) · el texto sugerido va encima.</p>
+      ${PB_PROMPTS.map((x) => `
+        <div class="ad-card">
+          <strong>${esc(x.name)}</strong>
+          ${pre(x.p)}
+          <p class="small" style="color:var(--ink-muted);margin:0.3rem 0">✍️ Texto encima: ${esc(x.overlay)}</p>
+          ${copyBtn(x.p, '📋 Copiar prompt')}
+        </div>`).join('')}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>🗓️ Calendario de 4 semanas</h3></div>
+      <div class="table-wrap"><table>
+        <tr><th>Semana</th><th>Qué haces</th></tr>
+        <tr><td>1</td><td>Lanza los 3 anuncios de Meta ($6/día) y la búsqueda de Google ($4/día). No toques nada — deja aprender.</td></tr>
+        <tr><td>2</td><td>Apaga el anuncio más débil de Meta. Agrega a negativas las palabras de Google que traen clics basura.</td></tr>
+        <tr><td>3</td><td>Todo el presupuesto de Meta al ganador. Si el costo por solicitud va bien ($8–15), sube a $8/día.</td></tr>
+        <tr><td>4</td><td>Cuentas claras: si un cliente nuevo te paga $399/mes y te costó $60 en anuncios, escala sin miedo.</td></tr>
+      </table></div>
+      <div class="table-wrap"><table>
+        <tr><th>Señal</th><th>Meta saludable</th></tr>
+        <tr><td>CTR en Meta</td><td>&gt; 1.2%</td></tr>
+        <tr><td>Costo por clic en Google</td><td>&lt; $2.50</td></tr>
+        <tr><td>Costo por solicitud (lead)</td><td>$8 – $15</td></tr>
+        <tr><td>Solicitud → cliente</td><td>10 – 20% (responde en &lt; 1 hora)</td></tr>
+      </table></div>
+      <p style="color:var(--ink-soft);font-size:0.9rem;margin-top:0.6rem">📌 Pendiente: cuando crees las cuentas de Meta y Google, pásale a Claude el <strong>ID del Píxel</strong> y la <strong>etiqueta de Google</strong> para instalarlos en el sitio con eventos de conversión (brief enviado + pago en Stripe).</p>
+    </div>`;
+}
+
 /* ================= Global delegated events ================= */
 
 main.addEventListener('change', async (e) => {
@@ -569,6 +677,11 @@ main.addEventListener('change', async (e) => {
 main.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   try {
+    if (d.pcopy !== undefined && window._pbCopy) {
+      navigator.clipboard.writeText(window._pbCopy[Number(d.pcopy)]);
+      toast('Copiado al portapapeles ✓');
+      return;
+    }
     if (d.convert) {
       const fee = prompt('Monthly fee for this client ($)?', '399');
       if (fee === null) return;
@@ -619,7 +732,7 @@ main.addEventListener('submit', async (e) => {
 
 /* ================= Router ================= */
 
-const tabs = { dashboard: renderDashboard, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns, outbox: renderOutbox, settings: renderSettings };
+const tabs = { dashboard: renderDashboard, playbook: renderPlaybook, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns, outbox: renderOutbox, settings: renderSettings };
 
 $('#nav').addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-tab]');

@@ -702,6 +702,48 @@ admin.delete('/leads/:id', (req, res) => {
   res.json({ ok: store.deleteLead(req.params.id) });
 });
 
+// ---- prospects (cold-call list) ----
+admin.get('/prospects', (req, res) => res.json(store.db.prospects.slice().reverse()));
+
+admin.post('/prospects', (req, res) => {
+  const b = req.body || {};
+  if (!b.business || String(b.business).trim().length < 2) {
+    return res.status(400).json({ error: 'El nombre del negocio es obligatorio.' });
+  }
+  res.json(store.addProspect(b));
+});
+
+admin.patch('/prospects/:id', (req, res) => {
+  const p = store.updateProspect(req.params.id, req.body || {});
+  if (!p) return res.status(404).json({ error: 'Prospect not found' });
+  res.json(p);
+});
+
+// An interested prospect becomes a lead in the normal pipeline
+admin.post('/prospects/:id/convert', (req, res) => {
+  const p = store.db.prospects.find((x) => x.id === req.params.id);
+  if (!p) return res.status(404).json({ error: 'Prospect not found' });
+  const lead = store.addLead({
+    id: crypto.randomUUID(),
+    name: p.contact || p.business,
+    email: '',
+    phone: p.phone,
+    business: p.business,
+    plan: '',
+    budget: '',
+    message: `Prospecto de llamada en frío (${p.category || 'negocio local'}${p.city ? ', ' + p.city : ''}).\nWeb: ${p.website} · Google: ${p.google}\nNotas: ${p.notes || '—'}`,
+    status: 'contacted',
+    source: 'cold-call',
+    receivedAt: new Date().toISOString(),
+  });
+  store.updateProspect(p.id, { status: 'convertido' });
+  res.json(lead);
+});
+
+admin.delete('/prospects/:id', (req, res) => {
+  res.json({ ok: store.deleteProspect(req.params.id) });
+});
+
 // ---- clients ----
 admin.get('/clients', (req, res) => {
   const clients = store.db.clients.map((c) => ({

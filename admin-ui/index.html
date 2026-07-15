@@ -887,6 +887,21 @@ async function renderProspects() {
     </div>
 
     <div class="panel">
+      <div class="panel-head"><h3>🎯 Tamaño del mercado — ¿cuántos negocios pueden comprarnos?</h3></div>
+      <div style="display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap">
+        <div style="text-align:center;padding:0.4rem 1rem">
+          <div style="font-size:2rem;font-weight:800;color:var(--gold,#e8b64c)">6,000 – 9,000</div>
+          <div class="small" style="color:var(--ink-muted)">posibles compradores<br>(LA + San Bernardino)</div>
+        </div>
+        <div class="small" style="flex:1;min-width:240px;color:var(--ink-muted)">
+          <p style="margin:0.2rem 0">Cómo sale el número: en el condado de Los Ángeles hay <strong>~34,000 negocios con dueño latino</strong> (censo 2022, solo los que tienen empleados) y <strong>~26,000 restaurantes</strong>; San Bernardino suma <strong>~196,000 pequeños negocios</strong> en total.</p>
+          <p style="margin:0.4rem 0 0.2rem">De esos, los giros que llamamos (restaurantes, panaderías, salones, talleres, limpieza) son <strong>~20,000–25,000</strong> negocios locales, y <strong>~1 de cada 3 no tiene sitio web real</strong> (dato nacional: 27%; en nuestra lista verificada fue 6 de 10).</p>
+          <p style="margin:0.4rem 0 0.2rem"><strong>Con cerrar solo el 1% ya son 60–90 clientes</strong> (≈ $12,000–$18,000/mes en planes). El número exacto para tu zona sale con Apify — receta en "Importar lista" abajo. ⬇️</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
       <div class="panel-head"><h3>Lista (${shown.length}${filter !== 'todos' ? ' de ' + prospects.length : ''})</h3>
         <div style="display:flex;gap:0.35rem;flex-wrap:wrap">
           ${chip('todos', 'Todos', prospects.length)}
@@ -937,7 +952,8 @@ async function renderProspects() {
       <div class="panel-head"><h3>📥 Importar lista (de Apify o Google Maps)</h3></div>
       <details style="margin-bottom:0.6rem"><summary style="cursor:pointer;font-weight:600;font-size:0.88rem">🔍 ¿Cómo encontrar prospectos? (Google Maps a mano · Apify automático)</summary>
         <div class="ad-card"><p style="margin:0.2rem 0"><strong>A mano:</strong> Google Maps → "[giro] + [ciudad]" → señales de oro: sin sitio web, &lt;10 reseñas, sin horarios. Apunta nombre y teléfono.</p>
-        <p style="margin:0.5rem 0 0.2rem"><strong>Automático (Apify):</strong> apify.com (gratis) → actor <strong>"Google Maps Scraper"</strong> → busca "panaderías" en tu ciudad, 100 lugares → exporta CSV → filtra filas con columna <strong>website vacía</strong> → pega abajo las columnas nombre | teléfono | ciudad. Cientos de prospectos en 10 minutos.</p></div>
+        <p style="margin:0.5rem 0 0.2rem"><strong>Automático (Apify):</strong> apify.com (gratis) → actor <strong>"Google Maps Scraper"</strong> → busca "panaderías" en tu ciudad, 100 lugares → exporta CSV → filtra filas con columna <strong>website vacía</strong> → pega abajo las columnas nombre | teléfono | ciudad. Cientos de prospectos en 10 minutos.</p>
+        <p style="margin:0.5rem 0 0.2rem"><strong>📊 Para saber el número EXACTO de tu mercado:</strong> corre el mismo actor con estas búsquedas — "restaurante", "panadería", "taquería", "salón de belleza", "barbería", "taller mecánico", "limpieza" — una vez por ciudad (Los Ángeles, East LA, San Bernardino, Fontana, Ontario, Riverside). Exporta todo a un solo CSV, ábrelo en Excel/Google Sheets y cuenta las filas donde <strong>website está vacía</strong> (en Sheets: <code>=COUNTIF(rango_website,"")</code>). Ese conteo es tu mercado real, negocio por negocio, con nombre y teléfono listos para pegar aquí.</p></div>
       </details>
       <form id="prospect-bulk">
         <textarea name="text" rows="4" placeholder="Una línea por negocio:  Negocio | Teléfono | Ciudad | Giro&#10;Tacos El Güero | 832 555 0123 | Los Ángeles, CA | Restaurante&#10;(también sirve pegar columnas de Excel/CSV separadas por tabulador)"></textarea>

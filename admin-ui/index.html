@@ -677,86 +677,245 @@ async function renderPlaybook() {
 
 const PSTATUS = {
   'por-llamar': 'Por llamar', 'sin-respuesta': 'Sin respuesta', 'llamar-despues': 'Llamar después',
-  interesado: 'Interesado', cita: 'Cita agendada', convertido: 'Convertido ✓', 'no-interesado': 'No interesado',
+  interesado: 'Interesado', cita: 'Cita agendada', convertido: 'Cliente ✓', 'no-interesado': 'No quiere',
 };
 const PCATS = ['Restaurante / comida', 'Panadería', 'Salón / barbería', 'Taller mecánico', 'Limpieza', 'Jardinería', 'Construcción', 'Tienda', 'Otro'];
 
-const CALL_SCRIPT = `
-  <details style="margin:0.4rem 0" open><summary style="cursor:pointer;font-weight:700">🇲🇽 Guión completo — ESPAÑOL</summary>
+/* The script as data: renders in call mode (personalized) and in the full-script view */
+const SCRIPT_I18N = {
+  es: {
+    openerTitle: 'APERTURA — 30 SEGUNDOS',
+    opener: `— Buenos días, ¿hablo con el dueño o la dueña de [NEGOCIO]?
 
-    <div class="ad-card"><div class="platform">APERTURA (LOS PRIMEROS 30 SEGUNDOS)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Buenos días, ¿hablo con el dueño o la dueña de [NEGOCIO]?
-
-— Mi nombre es [TU NOMBRE], de Your LocalLift. Le llamo rapidito: busqué [NEGOCIO] en Google y me di cuenta de que [no tiene página web / casi no aparece]. Nosotros ayudamos justo a negocios como el suyo a conseguir más clientes por internet — todo en español. ¿Le puedo robar 30 segundos?
+— Mi nombre es [TU NOMBRE], de Your LocalLift. Le llamo rapidito: busqué [NEGOCIO] en Google y me di cuenta de que no tiene página web / casi no aparece. Nosotros ayudamos justo a negocios como el suyo a conseguir más clientes por internet — todo en español. ¿Le puedo robar 30 segundos?
 
 [SI DICE QUE SÍ:]
-— Le hacemos su página web como proyecto aparte — desde $499 una sola vez, y es suya para siempre. Y si quiere que le llevemos el marketing (Google, redes, anuncios), eso va desde $199 al mes, sin contratos. Lo primero es GRATIS: le preparamos un plan por escrito para su negocio. Si le gusta, empezamos; si no, se queda con el plan sin pagar nada.
+— Le hacemos su página web como proyecto aparte — desde $499 una sola vez, y es suya para siempre. Y si quiere que le llevemos el marketing (Google, redes, anuncios), eso va desde $199 al mes, sin contratos. Lo primero es GRATIS: un plan por escrito para su negocio. Si le gusta, empezamos; si no, se queda con el plan.
 
-— ¿Le parece si le agendo una llamada de 20 minutos con mi socio? ¿Mejor mañana en la mañana o en la tarde?</p></div>
+— ¿Le agendo una llamada de 20 minutos con mi socio? ¿Mañana en la mañana o en la tarde?`,
+    rules: 'Sonríe al hablar · di el nombre de SU negocio en los primeros 10 segundos · la meta es la CITA, no la venta.',
+    tapLabel: '¿Qué te dijeron? Toca para ver qué responder:',
+    outcomeLabel: 'Termina la llamada — registra el resultado:',
+    notePh: 'Nota rápida (opcional): "volver a marcar el jueves", "hablar con la esposa"…',
+    scenarios: [
+      ['👥 Empleado', 'CONTESTA UN EMPLEADO', `— ¿A qué hora puedo encontrar al dueño? … Perfecto. ¿Le puede decir que llamó [TU NOMBRE] de Your LocalLift, sobre cómo conseguir más clientes? Le marco a esa hora. ¡Gracias!
 
-    <div class="ad-card"><div class="platform">CONTESTA UN EMPLEADO</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¿A qué hora puedo encontrar al dueño? … Perfecto. ¿Le puede decir que llamó [TU NOMBRE] de Your LocalLift, sobre cómo conseguir más clientes? Le marco a esa hora. ¡Gracias!</p><p class="small" style="color:var(--ink-muted)">Apunta la hora con estado "Llamar después".</p></div>
-    <div class="ad-card"><div class="platform">"NO TENGO TIEMPO"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Lo entiendo perfecto — y justo por eso existimos: nosotros hacemos todo para que usted no le meta tiempo. Le mando la información por texto ahora mismo y le marco cuando usted diga. ¿Mejor mañana en la mañana o en la tarde?</p><p class="small" style="color:var(--ink-muted)">Siempre DOS opciones de horario, nunca "¿cuándo puede?".</p></div>
-    <div class="ad-card"><div class="platform">"¿CUÁNTO CUESTA?"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Depende de lo que necesite: la página web es un proyecto único desde $499 — la paga una vez y es suya. El marketing (Google, redes, anuncios) va desde $199 al mes sin contrato, y el hosting son $15 al mes. Pero antes de cobrarle un centavo le hacemos un plan gratis por escrito para SU negocio. ¿Se lo mandamos?</p></div>
-    <div class="ad-card"><div class="platform">"YA TENGO QUIEN ME LO LLEVE" / "MI SOBRINO LO HACE"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¡Qué bueno que ya le están echando la mano! ¿Y está contento con los resultados? … Si algún día quiere una segunda opinión, el plan gratis no cuesta nada y no lo compromete a nada. Le dejo el dato: yourlocallift.com.</p></div>
-    <div class="ad-card"><div class="platform">"NO ME INTERESA"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Claro, no hay problema. Solo le dejo la página por si algún día la ocupa: yourlocallift.com. ¡Que tenga buen día!</p><p class="small" style="color:var(--ink-muted)">Nunca insistas dos veces. Marca "No interesado" y a la siguiente.</p></div>
-    <div class="ad-card"><div class="platform">"MÁNDEME INFORMACIÓN"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Con mucho gusto. ¿Se la mando por texto a este mismo número?
+→ Marca "Llamar después" con la hora en la nota.`],
+      ['⏳ Sin tiempo', '"NO TENGO TIEMPO"', `— Lo entiendo perfecto — y justo por eso existimos: nosotros hacemos todo para que usted no le meta tiempo. Le mando la información por texto ahora mismo y le marco cuando usted diga. ¿Mejor mañana en la mañana o en la tarde?
+
+→ Siempre DOS opciones de horario, nunca "¿cuándo puede?".`],
+      ['💰 Precio', '"¿CUÁNTO CUESTA?"', `— Depende de lo que necesite: la página web es un proyecto único desde $499 — la paga una vez y es suya. El marketing (Google, redes, anuncios) va desde $199 al mes sin contrato, y el hosting son $15 al mes. Pero antes de cobrarle un centavo le hacemos un plan gratis por escrito para SU negocio. ¿Se lo mandamos?`],
+      ['🧑‍🔧 Ya tiene', '"YA TENGO QUIEN ME LO LLEVE"', `— ¡Qué bueno que ya le están echando la mano! ¿Y está contento con los resultados? … Si algún día quiere una segunda opinión, el plan gratis no cuesta nada y no lo compromete a nada. Le dejo el dato: yourlocallift.com.`],
+      ['🚫 No quiere', '"NO ME INTERESA"', `— Claro, no hay problema. Solo le dejo la página por si algún día la ocupa: yourlocallift.com. ¡Que tenga buen día!
+
+→ Nunca insistas dos veces. Marca "No quiere" y a la siguiente.`],
+      ['📩 Pide info', '"MÁNDEME INFORMACIÓN"', `— Con mucho gusto. ¿Se la mando por texto a este mismo número?
 
 [TEXTO PARA ENVIAR:]
-Hola [NOMBRE], soy [TU NOMBRE] de Your LocalLift 👋 Ayudamos a negocios como [NEGOCIO] a conseguir más clientes: página web desde $499 (pago único) y marketing desde $199/mes, sin contratos. Su plan gratis por escrito: yourlocallift.com — también puede chatear ahí mismo con nosotros 24/7.</p></div>
-    <div class="ad-card"><div class="platform">BUZÓN DE VOZ (15 SEGUNDOS)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Buenos días, soy [TU NOMBRE] de Your LocalLift. Busqué [NEGOCIO] en Google y tengo un par de ideas para que le lleguen más clientes — sin costo, sin compromiso. Le marco más tarde, o me encuentra en yourlocallift.com. ¡Buen día!</p></div>
-    <div class="ad-card"><div class="platform">ESTÁ INTERESADO → CIERRA LA CITA</div><p style="white-space:pre-wrap;margin:0.3rem 0">— ¡Perfecto! Le agendo una llamada de 20 minutos, gratis y sin compromiso, para conocer su negocio y prepararle su plan. ¿Mañana a las 10 o mejor a las 4? … Listo, le mando la confirmación por texto. ¡Hasta mañana!</p><p class="small" style="color:var(--ink-muted)">Marca "Cita agendada" y usa → Lead para pasarlo al embudo.</p></div>
-    <p class="small" style="color:var(--ink-muted)">Reglas de oro: sonríe al hablar (se escucha) · di el nombre de SU negocio en los primeros 10 segundos · la meta es la CITA, no la venta · registra cada llamada apenas cuelgues.</p>
-  </details>
+Hola, soy [TU NOMBRE] de Your LocalLift 👋 Ayudamos a negocios como [NEGOCIO] a conseguir más clientes: página web desde $499 (pago único) y marketing desde $199/mes, sin contratos. Su plan gratis por escrito: yourlocallift.com — también puede chatear ahí mismo con nosotros 24/7.`],
+      ['📼 Buzón', 'BUZÓN DE VOZ — 15 SEGUNDOS', `— Buenos días, soy [TU NOMBRE] de Your LocalLift. Busqué [NEGOCIO] en Google y tengo un par de ideas para que le lleguen más clientes — sin costo, sin compromiso. Le marco más tarde, o me encuentra en yourlocallift.com. ¡Buen día!
 
-  <details style="margin:0.4rem 0"><summary style="cursor:pointer;font-weight:700">🇺🇸 Full script — ENGLISH</summary>
+→ Marca "Sin respuesta".`],
+      ['🔥 Interesado', 'ESTÁ INTERESADO → CIERRA LA CITA', `— ¡Perfecto! Le agendo una llamada de 20 minutos, gratis y sin compromiso, para conocer su negocio y prepararle su plan. ¿Mañana a las 10 o mejor a las 4? … Listo, le mando la confirmación por texto. ¡Hasta mañana!
 
-    <div class="ad-card"><div class="platform">OPENING (THE FIRST 30 SECONDS)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Good morning, am I speaking with the owner of [BUSINESS]?
+→ Marca "Cita agendada" — se convierte en lead automáticamente.`],
+    ],
+  },
+  en: {
+    openerTitle: 'OPENING — 30 SECONDS',
+    opener: `— Good morning, am I speaking with the owner of [NEGOCIO]?
 
-— My name is [YOUR NAME], with Your LocalLift. Quick call: I looked up [BUSINESS] on Google and noticed you [don't have a website / barely show up]. We help businesses just like yours get more customers online. Can I take 30 seconds?
+— My name is [YOUR NAME], with Your LocalLift. Quick call: I looked up [NEGOCIO] on Google and noticed you don't have a website / barely show up. We help businesses just like yours get more customers online. Can I take 30 seconds?
 
 [IF THEY SAY YES:]
-— We build your website as a one-time project — from $499, paid once, and it's yours forever. And if you'd like us to run your marketing (Google, social media, ads), that starts at $199 a month, no contracts. The first step is FREE: a written plan for your business. If you like it, we start; if not, you keep the plan and pay nothing.
+— We build your website as a one-time project — from $499, paid once, and it's yours forever. And if you'd like us to run your marketing (Google, social media, ads), that starts at $199 a month, no contracts. The first step is FREE: a written plan for your business. If you like it, we start; if not, you keep the plan.
 
-— How about I set up a 20-minute call with my partner? Is tomorrow morning better, or the afternoon?</p></div>
+— How about a 20-minute call with my partner? Tomorrow morning or afternoon?`,
+    rules: "Smile while you talk · say THEIR business name in the first 10 seconds · the goal is the APPOINTMENT, not the sale.",
+    tapLabel: 'What did they say? Tap to see your answer:',
+    outcomeLabel: 'End the call — log the result:',
+    notePh: 'Quick note (optional): "call back Thursday", "talk to his wife"…',
+    scenarios: [
+      ['👥 Employee', 'AN EMPLOYEE ANSWERS', `— What time can I catch the owner? … Perfect. Could you tell them [YOUR NAME] from Your LocalLift called, about getting more customers? I'll call back then. Thank you!
 
-    <div class="ad-card"><div class="platform">AN EMPLOYEE ANSWERS</div><p style="white-space:pre-wrap;margin:0.3rem 0">— What time can I catch the owner? … Perfect. Could you tell them [YOUR NAME] from Your LocalLift called, about getting more customers? I'll call back then. Thank you!</p><p class="small" style="color:var(--ink-muted)">Log the time with status "Llamar después".</p></div>
-    <div class="ad-card"><div class="platform">"I DON'T HAVE TIME"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— I completely understand — and that's exactly why we exist: we do everything so you don't spend a minute on it. I'll text you the info right now and call back whenever you say. Tomorrow morning or afternoon?</p><p class="small" style="color:var(--ink-muted)">Always offer TWO time options, never "when works for you?".</p></div>
-    <div class="ad-card"><div class="platform">"HOW MUCH IS IT?"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— It depends on what you need: the website is a one-time project from $499 — you pay once and it's yours. Marketing (Google, social, ads) starts at $199/month with no contract, and hosting is $15/month. But before we charge you a cent, we make you a free written plan for YOUR business. Want me to send it?</p></div>
-    <div class="ad-card"><div class="platform">"I ALREADY HAVE SOMEONE" / "MY NEPHEW DOES IT"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— That's great that someone's helping you! Are you happy with the results? … If you ever want a second opinion, the free plan costs nothing and commits you to nothing. Here's the site: yourlocallift.com.</p></div>
-    <div class="ad-card"><div class="platform">"NOT INTERESTED"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— No problem at all. I'll just leave you the site in case you ever need it: yourlocallift.com. Have a great day!</p><p class="small" style="color:var(--ink-muted)">Never push twice. Mark "No interesado" and move on.</p></div>
-    <div class="ad-card"><div class="platform">"SEND ME SOME INFO"</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Happy to. Can I text it to this number?
+→ Mark "Llamar después" with the time in the note.`],
+      ['⏳ No time', '"I DON\'T HAVE TIME"', `— I completely understand — and that's exactly why we exist: we do everything so you don't spend a minute on it. I'll text you the info right now and call back whenever you say. Tomorrow morning or afternoon?
+
+→ Always TWO time options, never "when works for you?".`],
+      ['💰 Price', '"HOW MUCH IS IT?"', `— It depends on what you need: the website is a one-time project from $499 — you pay once and it's yours. Marketing (Google, social, ads) starts at $199/month with no contract, and hosting is $15/month. But before we charge you a cent, we make you a free written plan for YOUR business. Want me to send it?`],
+      ['🧑‍🔧 Has someone', '"I ALREADY HAVE SOMEONE"', `— That's great that someone's helping you! Are you happy with the results? … If you ever want a second opinion, the free plan costs nothing and commits you to nothing. Here's the site: yourlocallift.com.`],
+      ['🚫 Not interested', '"NOT INTERESTED"', `— No problem at all. I'll just leave you the site in case you ever need it: yourlocallift.com. Have a great day!
+
+→ Never push twice. Mark "No quiere" and move on.`],
+      ['📩 Wants info', '"SEND ME SOME INFO"', `— Happy to. Can I text it to this number?
 
 [TEXT TO SEND:]
-Hi [NAME], this is [YOUR NAME] from Your LocalLift 👋 We help businesses like [BUSINESS] get more customers: websites from $499 one-time and marketing from $199/mo, no contracts. Your free written plan: yourlocallift.com — you can also chat with us there 24/7.</p></div>
-    <div class="ad-card"><div class="platform">VOICEMAIL (15 SECONDS)</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Good morning, this is [YOUR NAME] from Your LocalLift. I looked up [BUSINESS] on Google and I have a couple of ideas to bring you more customers — free, no strings attached. I'll try you later, or find me at yourlocallift.com. Have a great day!</p></div>
-    <div class="ad-card"><div class="platform">THEY'RE INTERESTED → CLOSE THE APPOINTMENT</div><p style="white-space:pre-wrap;margin:0.3rem 0">— Perfect! I'll set up a free, no-commitment 20-minute call to learn about your business and prepare your plan. Tomorrow at 10, or is 4 better? … Done, I'll text you the confirmation. Talk tomorrow!</p><p class="small" style="color:var(--ink-muted)">Mark "Cita agendada" and use → Lead to move them into the funnel.</p></div>
-    <p class="small" style="color:var(--ink-muted)">Golden rules: smile while you talk (they can hear it) · say THEIR business name in the first 10 seconds · the goal is the APPOINTMENT, not the sale · log every call the moment you hang up.</p>
-  </details>
+Hi, this is [YOUR NAME] from Your LocalLift 👋 We help businesses like [NEGOCIO] get more customers: websites from $499 one-time and marketing from $199/mo, no contracts. Your free written plan: yourlocallift.com — you can also chat with us there 24/7.`],
+      ['📼 Voicemail', 'VOICEMAIL — 15 SECONDS', `— Good morning, this is [YOUR NAME] from Your LocalLift. I looked up [NEGOCIO] on Google and I have a couple of ideas to bring you more customers — free, no strings attached. I'll try you later, or find me at yourlocallift.com. Have a great day!
 
-  <details style="margin:0.4rem 0"><summary style="cursor:pointer;font-weight:700">🔍 Dónde encontrar prospectos — a mano y automático (Apify)</summary>
-    <div class="ad-card"><p style="margin:0.2rem 0"><strong>A mano · Google Maps (gratis).</strong> Busca "[giro] + [tu ciudad]": taquería, panadería, salón, taller, limpieza… Abre cada ficha y busca las señales de oro: <strong>sin sitio web</strong>, menos de 10 reseñas, sin horarios, fotos viejas. Apunta nombre y teléfono aquí (o usa "Importar lista" abajo).</p>
-    <p style="margin:0.7rem 0 0.2rem"><strong>Automático · Apify (la máquina de prospectos).</strong> En <strong>apify.com</strong> crea una cuenta gratis (incluye $5 de uso al mes — alcanza para cientos de negocios):</p>
-    <p style="margin:0.3rem 0 0.2rem">1 · Busca el actor <strong>"Google Maps Scraper"</strong> (compass/crawler-google-places).<br>
-    2 · Search term: <em>"restaurantes"</em> (o salones, talleres…) · Location: <em>tu ciudad</em> · Number of places: 100.<br>
-    3 · Corre el actor y exporta el resultado como <strong>CSV</strong>.<br>
-    4 · En la hoja, filtra las filas donde la columna <strong>website esté VACÍA</strong> — esos son tus prospectos de oro. También sirve: <em>reviewsCount</em> &lt; 10.<br>
-    5 · Copia las columnas nombre | teléfono | ciudad y pégalas en <strong>"Importar lista"</strong> aquí abajo. Listo: cola de llamadas para la semana.</p>
-    <p style="margin:0.6rem 0 0.2rem"><strong>También:</strong> Facebook (negocios que publican en grupos locales sin página propia) · Yelp/Nextdoor (fichas sin web) · la calle (negocio lleno → búscalo en Google en el momento).</p>
-    <p style="margin:0.6rem 0 0.2rem;color:var(--ink-muted)" class="small">Meta diaria: 20 prospectos ≈ 10-14 contestadas ≈ 1-2 citas. Es un juego de números — el guión hace el resto.</p></div>
-  </details>
-`;
+→ Mark "Sin respuesta".`],
+      ['🔥 Interested', "THEY'RE INTERESTED → CLOSE", `— Perfect! I'll set up a free, no-commitment 20-minute call to learn about your business and prepare your plan. Tomorrow at 10, or is 4 better? … Done, I'll text you the confirmation. Talk tomorrow!
+
+→ Mark "Cita agendada" — it becomes a lead automatically.`],
+    ],
+  },
+};
+
+const OUTCOMES = [
+  ['sin-respuesta', '📵 Sin respuesta'],
+  ['llamar-despues', '⏰ Llamar después'],
+  ['no-interesado', '🚫 No quiere'],
+  ['interesado', '⭐ Interesado'],
+  ['cita', '📅 ¡Cita! ✓'],
+];
+
+function personalize(text, p) {
+  return text.replaceAll('[NEGOCIO]', p ? p.business : '[NEGOCIO]');
+}
+
+/* Call mode: the dialer screen — script personalized, one-tap outcomes, auto-next */
+function showCallMode(pid) {
+  const cache = window._prospCache || [];
+  const p = cache.find((x) => x.id === pid);
+  if (!p) return;
+  let lang = window._callLang || 'es';
+  const body = $('#modal-body');
+  const queue = cache.filter((x) => x.status === 'por-llamar' && x.id !== p.id).length;
+
+  function render() {
+    const S = SCRIPT_I18N[lang];
+    body.innerHTML = `
+      <button class="close-x" onclick="document.getElementById('modal').close()" aria-label="Cerrar">✕</button>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+        <div>
+          <h2 style="margin:0">📞 ${esc(p.business)}</h2>
+          <p class="small" style="color:var(--ink-muted);margin:0.2rem 0">${esc(p.category || '')}${p.city ? ' · ' + esc(p.city) : ''}${p.contact ? ' · ' + esc(p.contact) : ''} · <span class="pill paused">${queue} en cola</span></p>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+          ${p.phone ? `<a class="btn btn-primary" href="tel:${esc(p.phone.replace(/[^+\d]/g, ''))}">📱 ${esc(p.phone)}</a>` : '<span class="pill paused">sin teléfono</span>'}
+          <button class="btn btn-ghost btn-sm" id="call-lang">${lang === 'es' ? '🇺🇸 EN' : '🇲🇽 ES'}</button>
+        </div>
+      </div>
+      ${p.notes ? `<p class="small" style="color:var(--warn);margin:0.5rem 0 0">📝 ${esc(p.notes)}</p>` : ''}
+      <div class="ad-card" style="white-space:pre-wrap;font-size:0.98rem;line-height:1.65"><div class="platform">${esc(S.openerTitle)}</div>${esc(personalize(S.opener, p))}</div>
+      <p class="small" style="color:var(--ink-muted);margin:0.2rem 0 0.4rem">💡 ${esc(S.rules)}</p>
+      <p style="font-weight:700;font-size:0.88rem;margin:0.8rem 0 0.4rem">${esc(S.tapLabel)}</p>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
+        ${S.scenarios.map((s, i) => `<button class="btn btn-ghost btn-sm" data-sc="${i}">${esc(s[0])}</button>`).join('')}
+      </div>
+      <div id="sc-panel"></div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:1.1rem 0 0.9rem">
+      <p style="font-weight:700;font-size:0.88rem;margin:0 0 0.4rem">${esc(S.outcomeLabel)}</p>
+      <input id="call-note" placeholder="${esc(S.notePh)}" style="margin-bottom:0.6rem">
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+        ${OUTCOMES.map(([k, l]) => `<button class="btn ${k === 'cita' ? 'btn-primary' : k === 'interesado' ? 'btn-teal' : 'btn-ghost'}" data-outcome="${k}">${l}</button>`).join('')}
+      </div>
+      <p class="small" style="color:var(--ink-muted);margin-top:0.6rem">Al registrar el resultado pasa solo al siguiente prospecto de la cola. "¡Cita!" lo convierte en lead automáticamente.</p>`;
+
+    body.querySelector('#call-lang').addEventListener('click', () => {
+      lang = lang === 'es' ? 'en' : 'es';
+      window._callLang = lang;
+      render();
+    });
+    body.querySelectorAll('[data-sc]').forEach((b) => b.addEventListener('click', () => {
+      const s = SCRIPT_I18N[lang].scenarios[Number(b.dataset.sc)];
+      body.querySelector('#sc-panel').innerHTML =
+        `<div class="ad-card" style="border-color:var(--gold)"><div class="platform">${esc(s[1])}</div><p style="white-space:pre-wrap;margin:0.3rem 0;font-size:0.95rem;line-height:1.6">${esc(personalize(s[2], p))}</p></div>`;
+    }));
+    body.querySelectorAll('[data-outcome]').forEach((b) => b.addEventListener('click', async () => {
+      const status = b.dataset.outcome;
+      const note = body.querySelector('#call-note').value.trim();
+      const patch = { status };
+      if (note) patch.notes = (p.notes ? p.notes + ' · ' : '') + new Date().toLocaleDateString('es-MX') + ': ' + note;
+      try {
+        if (status === 'cita') await api('/prospects/' + p.id + '/convert', { method: 'POST', body: {} });
+        await api('/prospects/' + p.id, { method: 'PATCH', body: patch });
+      } catch (err) { alert(err.message); return; }
+      window._callDirty = true;
+      Object.assign(p, patch);
+      toast((PSTATUS[status] || status) + ' ✓');
+      const next = cache.find((x) => x.status === 'por-llamar' && x.id !== p.id);
+      if (next) showCallMode(next.id);
+      else { $('#modal').close(); }
+    }));
+  }
+  render();
+  if (!$('#modal').open) $('#modal').showModal();
+}
+
+/* Full script view (both languages, everything expanded) */
+function showFullScript() {
+  const block = (lang, title) => {
+    const S = SCRIPT_I18N[lang];
+    return `<h3>${title}</h3>
+      <div class="ad-card" style="white-space:pre-wrap"><div class="platform">${esc(S.openerTitle)}</div>${esc(S.opener)}</div>
+      ${S.scenarios.map((s) => `<div class="ad-card"><div class="platform">${esc(s[1])}</div><p style="white-space:pre-wrap;margin:0.3rem 0">${esc(s[2])}</p></div>`).join('')}
+      <p class="small" style="color:var(--ink-muted)">💡 ${esc(S.rules)}</p>`;
+  };
+  $('#modal-body').innerHTML = `
+    <button class="close-x" onclick="document.getElementById('modal').close()" aria-label="Cerrar">✕</button>
+    <h2 style="margin-top:0.4rem">📜 Guión completo</h2>
+    ${block('es', '🇲🇽 Español')}
+    ${block('en', '🇺🇸 English')}`;
+  $('#modal').showModal();
+}
 
 async function renderProspects() {
   const prospects = await api('/prospects');
+  window._prospCache = prospects;
+  const filter = window._pfilter || 'todos';
   const counts = {};
   prospects.forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
+  const shown = filter === 'todos' ? prospects : prospects.filter((p) => p.status === filter);
+  const porLlamar = counts['por-llamar'] || 0;
+
+  const chip = (key, label, n) =>
+    `<button class="btn btn-sm ${filter === key ? 'btn-primary' : 'btn-ghost'}" data-pfilter="${key}">${label}${n !== undefined ? ' · ' + n : ''}</button>`;
 
   main.innerHTML = `
     <h2>📞 Prospectos — llamadas en frío</h2>
-    <div class="notice ok">La lista de trabajo de tu socio: negocios sin web ni marketing. Guión y escenarios abajo — registra el resultado de CADA llamada, y cuando alguien se interese usa <strong>→ Lead</strong> para pasarlo al embudo normal.</div>
+
+    <div class="panel" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div>
+        <strong style="font-size:1.05rem">${porLlamar} por llamar</strong>
+        <span class="small" style="color:var(--ink-muted)"> · ${counts['cita'] || 0} citas · ${counts['convertido'] || 0} clientes · ${counts['no-interesado'] || 0} no quieren</span>
+      </div>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+        <button class="btn btn-primary" data-pcall-first="1">▶ Empezar a llamar</button>
+        <button class="btn btn-ghost" data-pscript="1">📜 Guión completo</button>
+      </div>
+    </div>
 
     <div class="panel">
-      <div class="panel-head"><h3>📜 Guión de llamadas y escenarios</h3></div>
-      ${CALL_SCRIPT}
+      <div class="panel-head"><h3>Lista (${shown.length}${filter !== 'todos' ? ' de ' + prospects.length : ''})</h3>
+        <div style="display:flex;gap:0.35rem;flex-wrap:wrap">
+          ${chip('todos', 'Todos', prospects.length)}
+          ${chip('por-llamar', '📵 Por llamar', counts['por-llamar'] || 0)}
+          ${chip('llamar-despues', '⏰ Después', counts['llamar-despues'] || 0)}
+          ${chip('interesado', '⭐ Interesados', counts['interesado'] || 0)}
+          ${chip('cita', '📅 Citas', counts['cita'] || 0)}
+          ${chip('convertido', '✓ Clientes', counts['convertido'] || 0)}
+          ${chip('no-interesado', '🚫 No quieren', counts['no-interesado'] || 0)}
+        </div>
+      </div>
+      <div class="table-wrap">
+      ${shown.length ? `<table>
+        <thead><tr><th></th><th>Negocio</th><th>Teléfono</th><th>Web/Google</th><th>Notas</th><th>Estado</th><th></th></tr></thead>
+        <tbody>${shown.map((p) => `
+          <tr>
+            <td><button class="btn btn-primary btn-sm" data-pcall="${p.id}">📞</button></td>
+            <td><strong>${esc(p.business)}</strong><div class="small">${esc(p.contact || '')}${p.contact && (p.category || p.city) ? ' · ' : ''}${esc(p.category || '')}${p.city ? ' · ' + esc(p.city) : ''}</div></td>
+            <td>${p.phone ? `<a href="tel:${esc(p.phone.replace(/[^+\d]/g, ''))}">${esc(p.phone)}</a>` : '—'}</td>
+            <td><span class="pill ${p.website === 'no' ? 'new' : p.website === 'mala' ? 'contacted' : 'active'}">web: ${esc(p.website)}</span> <span class="pill ${p.google === 'no' ? 'new' : p.google === 'incompleto' ? 'contacted' : 'active'}">g: ${esc(p.google)}</span></td>
+            <td style="max-width:220px">${esc(p.notes || '')} <button class="btn btn-ghost btn-sm" data-pnote="${p.id}">📝</button></td>
+            <td><select data-prospect-status="${p.id}" aria-label="Estado">${Object.entries(PSTATUS).map(([k, v]) => `<option value="${k}" ${p.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
+            <td style="white-space:nowrap">
+              ${p.status !== 'convertido' ? `<button class="btn btn-teal btn-sm" data-pconv="${p.id}">→ Lead</button>` : ''}
+              <button class="btn btn-ghost btn-sm" data-pdel="${p.id}">✕</button>
+            </td>
+          </tr>`).join('')}</tbody>
+      </table>` : `<div class="empty">${filter === 'todos' ? 'Todavía no hay prospectos. Agrega uno abajo o importa una lista.' : 'Nada con este estado todavía.'}</div>`}
+      </div>
     </div>
 
     <div class="panel">
@@ -765,46 +924,36 @@ async function renderProspects() {
         <label>Negocio *<input name="business" required placeholder="Tacos El Güero"></label>
         <label>Dueño/contacto<input name="contact" placeholder="Sr. Ramírez"></label>
         <label>Teléfono<input name="phone" placeholder="832 555 0123"></label>
-        <label>Ciudad<input name="city" placeholder="Houston, TX"></label>
+        <label>Ciudad<input name="city" placeholder="Los Ángeles, CA"></label>
         <label>Giro<select name="category">${PCATS.map((c) => `<option>${c}</option>`).join('')}</select></label>
         <label>¿Tiene web?<select name="website"><option value="no">No tiene</option><option value="mala">Tiene, pero mala</option><option value="si">Sí tiene</option></select></label>
         <label>¿Google Business?<select name="google"><option value="no">No aparece</option><option value="incompleto">Incompleto</option><option value="si">Completo</option></select></label>
-        <label class="full">Notas<input name="notes" placeholder="Ej. lleno los fines de semana, sin reseñas nuevas desde 2024…"></label>
+        <label class="full">Notas<input name="notes" placeholder="Ej. lleno los fines de semana, sin reseñas nuevas…"></label>
         <div><button class="btn btn-primary">Agregar</button></div>
       </form>
     </div>
 
     <div class="panel">
       <div class="panel-head"><h3>📥 Importar lista (de Apify o Google Maps)</h3></div>
+      <details style="margin-bottom:0.6rem"><summary style="cursor:pointer;font-weight:600;font-size:0.88rem">🔍 ¿Cómo encontrar prospectos? (Google Maps a mano · Apify automático)</summary>
+        <div class="ad-card"><p style="margin:0.2rem 0"><strong>A mano:</strong> Google Maps → "[giro] + [ciudad]" → señales de oro: sin sitio web, &lt;10 reseñas, sin horarios. Apunta nombre y teléfono.</p>
+        <p style="margin:0.5rem 0 0.2rem"><strong>Automático (Apify):</strong> apify.com (gratis) → actor <strong>"Google Maps Scraper"</strong> → busca "panaderías" en tu ciudad, 100 lugares → exporta CSV → filtra filas con columna <strong>website vacía</strong> → pega abajo las columnas nombre | teléfono | ciudad. Cientos de prospectos en 10 minutos.</p></div>
+      </details>
       <form id="prospect-bulk">
-        <textarea name="text" rows="4" placeholder="Una línea por negocio:  Negocio | Teléfono | Ciudad | Giro&#10;Tacos El Güero | 832 555 0123 | Houston, TX | Restaurante&#10;(también sirve pegar columnas copiadas de Excel/CSV separadas por tabulador)"></textarea>
+        <textarea name="text" rows="4" placeholder="Una línea por negocio:  Negocio | Teléfono | Ciudad | Giro&#10;Tacos El Güero | 832 555 0123 | Los Ángeles, CA | Restaurante&#10;(también sirve pegar columnas de Excel/CSV separadas por tabulador)"></textarea>
         <div style="margin-top:0.6rem"><button class="btn btn-primary">Importar prospectos</button></div>
       </form>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head"><h3>Lista de llamadas (${prospects.length})</h3>
-        <div>${Object.entries(PSTATUS).map(([k, v]) => counts[k] ? `<span class="pill ${k === 'convertido' || k === 'cita' ? 'active' : k === 'no-interesado' ? 'churned' : k === 'interesado' ? 'contacted' : 'paused'}" style="margin-left:0.4rem">${v}: ${counts[k]}</span>` : '').join('')}</div>
-      </div>
-      <div class="table-wrap">
-      ${prospects.length ? `<table>
-        <thead><tr><th>Negocio</th><th>Teléfono</th><th>Web / Google</th><th>Notas</th><th>Estado</th><th></th></tr></thead>
-        <tbody>${prospects.map((p) => `
-          <tr>
-            <td><strong>${esc(p.business)}</strong><div class="small">${esc(p.contact || '')}${p.contact && (p.category || p.city) ? ' · ' : ''}${esc(p.category || '')}${p.city ? ' · ' + esc(p.city) : ''}</div></td>
-            <td>${p.phone ? `<a href="tel:${esc(p.phone.replace(/[^+\d]/g, ''))}">${esc(p.phone)}</a>` : '—'}</td>
-            <td><span class="pill ${p.website === 'no' ? 'new' : p.website === 'mala' ? 'contacted' : 'active'}">web: ${esc(p.website)}</span><br><span class="pill ${p.google === 'no' ? 'new' : p.google === 'incompleto' ? 'contacted' : 'active'}" style="margin-top:0.25rem">google: ${esc(p.google)}</span></td>
-            <td style="max-width:240px">${esc(p.notes || '')} <button class="btn btn-ghost btn-sm" data-pnote="${p.id}">📝</button></td>
-            <td><select data-prospect-status="${p.id}" aria-label="Estado">${Object.entries(PSTATUS).map(([k, v]) => `<option value="${k}" ${p.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
-            <td style="white-space:nowrap">
-              ${p.status !== 'convertido' ? `<button class="btn btn-teal btn-sm" data-pconv="${p.id}">→ Lead</button>` : ''}
-              <button class="btn btn-ghost btn-sm" data-pdel="${p.id}">Borrar</button>
-            </td>
-          </tr>`).join('')}</tbody>
-      </table>` : `<div class="empty">Todavía no hay prospectos. Abre Google Maps, busca "[giro] + [tu ciudad]" y apunta aquí los negocios sin página web.</div>`}
-      </div>
     </div>`;
 }
+
+// refresh the list when call mode changed things and the dialog closes
+document.getElementById('modal').addEventListener('close', () => {
+  if (window._callDirty) {
+    window._callDirty = false;
+    const active = document.querySelector('#nav button.on');
+    if (active && active.dataset.tab === 'prospects') renderProspects();
+  }
+});
 
 /* ================= Global delegated events ================= */
 
@@ -840,6 +989,13 @@ main.addEventListener('click', async (e) => {
     }
     if (d.pconv) { await api('/prospects/' + d.pconv + '/convert', { method: 'POST', body: {} }); toast('Ahora es un lead 🎉 — míralo en Leads'); renderProspects(); }
     if (d.pdel && confirm('¿Borrar este prospecto?')) { await api('/prospects/' + d.pdel, { method: 'DELETE' }); renderProspects(); }
+    if (d.pcall) showCallMode(d.pcall);
+    if (d.pcallFirst) {
+      const next = (window._prospCache || []).find((x) => x.status === 'por-llamar');
+      if (next) showCallMode(next.id); else toast('No hay prospectos por llamar 🎉');
+    }
+    if (d.pfilter) { window._pfilter = d.pfilter; renderProspects(); }
+    if (d.pscript) showFullScript();
     if (d.gen) {
       const btn = e.target;
       btn.disabled = true;

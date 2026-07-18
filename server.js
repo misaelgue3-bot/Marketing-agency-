@@ -732,7 +732,7 @@ admin.get('/overview', (req, res) => {
     aiEnabled: agents.available(),
     aiProvider: agents.providerLabel(),
     imagesEnabled: agents.imagesAvailable(),
-    autoCampaigns: process.env.AUTO_CAMPAIGNS === 'true',
+    autoCampaigns: automations.isOn('AUTO_CAMPAIGNS'),
     automations: automations.enabledFlags(),
     telegramEnabled: telegram.available(),
   });
@@ -1012,6 +1012,39 @@ admin.patch('/posts/:id', (req, res) => {
 
 admin.delete('/posts/:id', (req, res) => res.json({ ok: store.deletePost(req.params.id) }));
 
+// Lucía writes the client's month of captions straight into the calendar
+// (status 'por-hacer' = the human approval gate before anything publishes)
+admin.post('/clients/:id/content-month', async (req, res) => {
+  if (!agents.available()) {
+    return res.status(503).json({ error: 'La IA está apagada. Agrega ANTHROPIC_API_KEY o GROQ_API_KEY en Render → Environment (el Dashboard te dice cómo).' });
+  }
+  const client = store.db.clients.find((c) => c.id === req.params.id);
+  if (!client) return res.status(404).json({ error: 'Cliente no encontrado' });
+
+  const count = client.plan === 'Inicial' ? 8 : 16;
+  try {
+    const captions = await agents.generateContentMonth(client, { count });
+    if (!captions.length) return res.status(502).json({ error: 'La IA no devolvió contenido. Intenta de nuevo.' });
+    // Mon/Wed/Fri slots (plus Tue/Thu when 16 posts), starting tomorrow
+    const days = captions.length > 10 ? [1, 2, 3, 4, 5] : [1, 3, 5];
+    const d = new Date();
+    const created = [];
+    for (const caption of captions) {
+      do { d.setDate(d.getDate() + 1); } while (!days.includes(d.getDay()));
+      created.push(store.addPost({
+        clientId: client.id,
+        date: d.toISOString().slice(0, 10),
+        network: 'Instagram/Facebook',
+        caption,
+      }));
+    }
+    res.json({ ok: true, created: created.length, by: 'Lucía', provider: agents.providerLabel() });
+  } catch (err) {
+    console.error('[content-month]', err.message);
+    res.status(502).json({ error: 'La IA falló al escribir el contenido: ' + err.message });
+  }
+});
+
 // Turn an AI campaign into dated posts: its ads spread over the next 4 weeks (Mon/Wed/Fri)
 admin.post('/campaigns/:id/schedule', (req, res) => {
   const k = store.db.campaigns.find((x) => x.id === req.params.id);
@@ -1126,7 +1159,7 @@ app.use('/api/admin', admin);
 let autoRunning = false;
 
 async function autoCampaignSweep() {
-  if (autoRunning || process.env.AUTO_CAMPAIGNS !== 'true' || !agents.available()) return;
+  if (autoRunning || !automations.isOn('AUTO_CAMPAIGNS') || !agents.available()) return;
   autoRunning = true;
   const month = new Date().toISOString().slice(0, 7);
   try {

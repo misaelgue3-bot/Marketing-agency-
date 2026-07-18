@@ -248,17 +248,23 @@ async function renderDashboard() {
       <div class="hlist">${health.checks.map(healthRow).join('')}</div>
     </div>
     ${o.aiEnabled && !o.imagesEnabled ? `<div class="notice warn">Las imágenes de anuncios están apagadas — agrega <strong>HIGGSFIELD_API_KEY</strong> + <strong>HIGGSFIELD_API_SECRET</strong> para que Valen genere visuales reales.</div>` : ''}
-    ${o.automations ? `<div class="panel" style="padding:0.9rem 1.2rem;margin-bottom:1.3rem">
-      <strong style="font-size:0.85rem">Autopilot:</strong>
-      ${[
-        ['Lead auto-reply', o.automations.leadReply],
-        ['Monthly check-ins', o.automations.monthlyCheckins],
-        ['Payment reminders', o.automations.paymentReminders],
-        ['Auto campaigns', o.automations.campaigns],
-        ['Weekly digest', o.automations.weeklyDigest],
-        ['Email sending', o.automations.email],
-      ].map(([n, on]) => `<span class="pill ${on ? 'active' : 'paused'}" style="margin-left:0.5rem">${n}: ${on ? 'ON' : 'off'}</span>`).join('')}
-    </div>` : ''}
+    <div class="panel">
+      <div class="panel-head"><h3>🤖 Tu equipo IA ${o.aiEnabled ? `<span class="pill active">activo — ${esc(o.aiProvider)}</span>` : '<span class="pill new">apagado — actívalo arriba</span>'}</h3></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.8rem">
+        ${[
+          ['💬 Sofía', 'Relaciones con clientes', 'Contesta el chat de la web y Telegram 24/7, captura leads, y escribe los mensajes de bienvenida, check-in y recordatorio de pago.', 'Siempre activa en chats · mensajes según Autopilot'],
+          ['🧠 Marco', 'Estratega', 'Estudia el negocio del cliente y propone las ideas de campaña del mes.', 'Al pedir ✨ Campaña (o solo, con Autopilot)'],
+          ['🎨 Lucía', 'Directora creativa', 'Revisa las ideas de Marco, escribe el brief, y redacta el mes completo de publicaciones de cada cliente.', 'Al pedir ✍️ Mes de contenido'],
+          ['🎬 Valen', 'Productor', 'Convierte el brief en anuncios terminados (ES/EN) con targeting, presupuesto y calendario — con imágenes de Higgsfield si está conectado.', 'Cierra el pipeline de ✨ Campaña'],
+        ].map(([name, role, does, when]) => `
+          <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:0.85rem 1rem">
+            <strong>${name}</strong> <span class="small" style="color:var(--ink-muted)">· ${role}</span>
+            <div class="small" style="margin-top:0.35rem">${does}</div>
+            <div class="small" style="color:var(--ink-muted);margin-top:0.35rem">⚡ ${when}</div>
+          </div>`).join('')}
+      </div>
+      <p class="small" style="color:var(--ink-muted);margin-top:0.7rem">Protocolo de agencia: los agentes proponen, <strong>tú apruebas</strong>. Todo lo que escriben queda en 📅 Publicaciones u Outbox como borrador antes de salir al mundo. Los switches de Autopilot están en Settings.</p>
+    </div>
     <div class="tiles">
       <div class="tile"><div class="label">Monthly recurring</div><div class="value">${money(o.mrr)}</div><div class="sub">from ${o.activeClients} active client${o.activeClients === 1 ? '' : 's'}</div></div>
       <div class="tile"><div class="label">Total collected</div><div class="value">${money(o.totalRevenue)}</div><div class="sub">all recorded payments</div></div>
@@ -365,6 +371,7 @@ async function renderClients() {
             </select>
             <a class="btn btn-primary btn-sm" href="/admin/clients/${c.id}/plan" target="_blank" rel="noopener" title="Documento oficial: qué incluye su plan, entregables y tiempos">📄 Plan de Servicio</a>
             <a class="btn btn-teal btn-sm" href="/admin/clients/${c.id}/report" target="_blank" rel="noopener" title="Reporte del mes en palabras claras, con los datos reales del sistema">📊 Reporte</a>
+            <button class="btn btn-teal btn-sm" data-content-month="${c.id}" title="Lucía escribe el mes completo de publicaciones (según su plan) y las pone en el calendario para tu aprobación">✍️ Mes de contenido</button>
             <button class="btn btn-teal btn-sm" data-gen="${c.id}">✨ Campaña</button>
             <button class="btn btn-ghost btn-sm" data-msg="${c.id}">💬 Mensaje</button>
             <button class="btn btn-ghost btn-sm" data-del-client="${c.id}">✕</button>
@@ -768,8 +775,16 @@ function showMessageDialog(clientId, clientLabel) {
 
 /* ================= Settings (edit the website) ================= */
 
+const AUTOFLAGS = [
+  ['AUTO_LEAD_REPLY', 'leadReply', 'Sofía contesta cada lead nuevo al instante'],
+  ['AUTO_MONTHLY_CHECKINS', 'monthlyCheckins', 'Sofía manda el check-in mensual a cada cliente (día 1)'],
+  ['AUTO_PAYMENT_REMINDERS', 'paymentReminders', 'Sofía recuerda el pago si no ha llegado (día 7)'],
+  ['AUTO_CAMPAIGNS', 'campaigns', 'El equipo crea la campaña mensual de cada cliente solo'],
+  ['WEEKLY_DIGEST', 'weeklyDigest', 'Resumen del negocio a tu correo cada lunes'],
+];
+
 async function renderSettings() {
-  const s = await api('/settings');
+  const [s, o] = await Promise.all([api('/settings'), api('/overview')]);
   main.innerHTML = `
     <h2>Website settings</h2>
     <p style="color:var(--ink-soft);margin-bottom:1rem">These change your live website <strong>instantly</strong> — no deploy, no code. For bigger edits (texts, sections, design), edit the files on GitHub or ask Claude.</p>
@@ -805,6 +820,17 @@ async function renderSettings() {
         <div><button class="btn btn-primary">Save — updates the live site</button></div>
       </form>
       <p class="small" style="color:var(--ink-muted);margin-top:0.8rem">Applies to both the Spanish and English pages. Tip: after changing prices, check the pricing section on your site to confirm it looks right.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>🤖 Autopilot — qué hacen los agentes solos</h3></div>
+      <p class="small" style="color:var(--ink-muted);margin:0 0 0.8rem">Los mensajes automáticos ${o.aiEnabled ? 'se escriben con IA y' : '<strong>necesitan la IA prendida</strong> (mira el Dashboard) y'} salen por correo si tienes SMTP configurado; si no, quedan como borradores en Outbox para que los copies. Nada se manda sin que el sistema lo registre.</p>
+      <form id="autopilot-form" style="display:grid;gap:0.5rem">
+        ${AUTOFLAGS.map(([key, effKey, label]) => `
+          <label style="display:flex;gap:0.6rem;align-items:center;font-size:0.88rem;cursor:pointer">
+            <input type="checkbox" name="${key}" ${o.automations && o.automations[effKey] ? 'checked' : ''}> ${label}
+          </label>`).join('')}
+        <div style="margin-top:0.4rem"><button class="btn btn-primary">Guardar Autopilot</button></div>
+      </form>
     </div>
     <div class="panel">
       <div class="panel-head"><h3>🛟 Respaldos de tus datos</h3></div>
@@ -1282,6 +1308,16 @@ main.addEventListener('click', async (e) => {
       const r = await api('/campaigns/' + d.sched + '/schedule', { method: 'POST' });
       toast(`📅 ${r.created} publicaciones creadas — míralas en Publicaciones`);
     }
+    if (d.contentMonth) {
+      const btn = e.target;
+      btn.disabled = true; btn.textContent = '✍️ Lucía escribiendo…';
+      try {
+        const r = await api('/clients/' + d.contentMonth + '/content-month', { method: 'POST' });
+        toast(`✍️ ${r.created} publicaciones escritas por Lucía — apruébalas en 📅 Publicaciones`);
+      } finally {
+        btn.disabled = false; btn.textContent = '✍️ Mes de contenido';
+      }
+    }
     if (d.convert) {
       const fee = prompt('Monthly fee for this client ($)?', '399');
       if (fee === null) return;
@@ -1343,6 +1379,13 @@ main.addEventListener('submit', async (e) => {
     if (e.target.id === 'payment-form') { await api('/payments', { method: 'POST', body }); toast('Payment recorded 💸'); renderPayments(); }
     if (e.target.id === 'post-form') { await api('/posts', { method: 'POST', body }); toast('Publicación agregada 📅'); renderPosts(); }
     if (e.target.id === 'settings-form') { await api('/settings', { method: 'PATCH', body }); toast('Saved — your live site is updated ✨'); renderSettings(); }
+    if (e.target.id === 'autopilot-form') {
+      const autoFlags = {};
+      AUTOFLAGS.forEach(([key]) => { autoFlags[key] = e.target.elements[key].checked; });
+      await api('/settings', { method: 'PATCH', body: { autoFlags } });
+      toast('Autopilot guardado 🤖');
+      renderSettings();
+    }
   } catch (err) { alert(err.message); }
 });
 

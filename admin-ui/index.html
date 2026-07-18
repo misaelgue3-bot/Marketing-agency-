@@ -505,37 +505,51 @@ const PS_GIROS = {
     product: 'sizzling al pastor tacos with charred pineapple on handmade corn tortillas, steam rising',
     place: 'a lively family-run taqueria with a glowing trompo grill and colorful paper decorations',
     worker: 'a taquero in a clean apron slicing marinated pork from the trompo with a long knife',
-    detail: 'fresh cilantro and diced onion scattered, lime wedges glistening' },
+    detail: 'fresh cilantro and diced onion scattered, lime wedges glistening' ,
+    before: 'raw marinated pork and fresh handmade tortillas laid out on the counter',
+    after: 'the finished al pastor tacos plated with cilantro, onion and lime' },
   panaderia: { label: 'Panadería',
     product: 'golden conchas and colorful pan dulce stacked on wooden trays, sugar crystals glistening',
     place: 'a cozy neighborhood bakery with glass display cases full of fresh bread',
     worker: 'a baker in a flour-dusted apron pulling a tray of hot bread from a stone oven',
-    detail: 'steam rising from fresh bread, warm crumbs on a wooden counter' },
+    detail: 'steam rising from fresh bread, warm crumbs on a wooden counter' ,
+    before: 'raw dough balls resting under flour dust on a wooden tray',
+    after: 'the same tray with golden baked conchas, sugar crystals glistening' },
   salon: { label: 'Salón de belleza',
     product: 'a glossy finished hairstyle with soft waves catching the light',
     place: 'a bright modern beauty salon with round mirrors and warm bulb lighting',
     worker: 'a stylist blow-drying a client\'s hair with focused, precise hands',
-    detail: 'individual hair strands lifting gently in the airflow' },
+    detail: 'individual hair strands lifting gently in the airflow' ,
+    before: 'hair being sectioned and clipped before styling',
+    after: 'the finished glossy hairstyle with soft waves catching the light' },
   barberia: { label: 'Barbería',
     product: 'a crisp fresh fade haircut with clean sharp edge lines',
     place: 'a classic barbershop with leather chairs and vintage wood details',
     worker: 'a barber shaping a beard with precise clipper strokes',
-    detail: 'fine hair clippings drifting through a warm beam of light' },
+    detail: 'fine hair clippings drifting through a warm beam of light' ,
+    before: 'a client with long unkempt hair seated in the barber chair',
+    after: 'the same client with a crisp finished fade, clean sharp lines' },
   taller: { label: 'Taller mecánico',
     product: 'a freshly polished car hood reflecting the workshop lights like a mirror',
     place: 'an organized auto repair shop with a tool wall and a car on a lift',
     worker: 'a mechanic in overalls tightening a bolt under a lifted car',
-    detail: 'a work lamp casting focused light across the engine bay' },
+    detail: 'a work lamp casting focused light across the engine bay' ,
+    before: 'a dusty scratched car hood under the workshop lights',
+    after: 'the same hood polished to a mirror shine reflecting the lights' },
   limpieza: { label: 'Limpieza',
     product: 'a spotless kitchen counter gleaming after a deep clean',
     place: 'a sunlit modern home interior, freshly cleaned, cushions perfectly placed',
     worker: 'a cleaner in uniform wiping a large window with smooth confident strokes',
-    detail: 'squeegee lines vanishing from the glass, tiny water droplets catching sunlight' },
+    detail: 'squeegee lines vanishing from the glass, tiny water droplets catching sunlight' ,
+    before: 'a cluttered kitchen counter with stains and scattered items',
+    after: 'the same counter spotless and gleaming in the sunlight' },
   generico: { label: 'Negocio local (general)',
     product: 'the shop\'s best-selling product displayed proudly on a clean counter',
     place: 'a welcoming small local storefront with warm light spilling onto the sidewalk',
     worker: 'the owner arranging products with visible care and pride',
-    detail: 'small handmade details that show craft and dedication' },
+    detail: 'small handmade details that show craft and dedication' ,
+    before: 'the workspace mid-process, materials laid out',
+    after: 'the finished product displayed proudly on a clean counter' },
 };
 
 const PS_GOALS = {
@@ -561,6 +575,33 @@ const PS_STYLES = {
 
 const PS_MOVES = ['Slow Dolly In toward', 'Crane Up slowly revealing', 'Slow 360 Orbit around', 'Handheld push-in toward'];
 
+
+const PS_RECIPES = {
+  fotoshoot: { label: '📸 Photo shoot de producto', fmt: 'Imagen 4:5',
+    build: (g) => `Studio product photography, 100mm macro lens, shallow depth of field, of ${g.product} on a seamless warm cream backdrop. Soft diffused key light from the left, gentle golden rim light from behind, ${g.detail}. Crisp textures, photorealistic commercial photography, vertical 4:5 composition. No text, no logos, no watermarks, natural proportions.` },
+  ugc: { label: '🤳 UGC estilo cliente', fmt: 'Video 9:16 · 5s',
+    build: (g) => `Aspect ratio 9:16, duration 5s.\nHandheld selfie-style vertical video with slight natural camera shake: a smiling customer holds ${g.product} up toward the lens inside ${g.place}. Natural daylight from a window, casual authentic phone-camera look, mild motion blur, one continuous handheld move that settles at the end. No text, no logos, natural hands and faces.` },
+  retrato: { label: '👤 Retrato del dueño', fmt: 'Imagen 4:5',
+    build: (g) => `Environmental portrait, 50mm lens at eye level, of ${g.worker}, pausing to face the camera with quiet pride in ${g.place}. Warm practical lights glowing in the background, golden hour light through the front window, shallow depth of field. Photorealistic editorial photography, vertical 4:5 composition. No text, no logos, natural proportions and hands.` },
+  antesdespues: { label: '🔄 Antes / Después', fmt: 'Imagen 4:5 (2 imágenes)',
+    build: (g) => `IMAGE 1 (before) — Locked-off eye-level shot, 40mm lens: ${g.before}. Neutral even lighting, documentary realism, vertical 4:5 composition. No text, no logos.\n\nIMAGE 2 (after, same framing) — Identical locked-off camera position: ${g.after}. Warm golden light, crisp detail, photorealistic, vertical 4:5 composition. No text, no logos.\n\n(Genera las dos y pégalas lado a lado en CapCut/Canva.)` },
+  backstage: { label: '🎬 Detrás de cámaras', fmt: 'Video 9:16 · 5s',
+    build: (g) => `Aspect ratio 9:16, duration 5s.\nHandheld documentary-style vertical video, close over-the-shoulder view of ${g.worker}, ${g.detail}. Warm practical lighting, shallow depth of field, one continuous slow push-in that settles at the end, natural physics. Authentic craft feel, photorealistic. No text, no logos, natural hands.` },
+  flatlay: { label: '📐 Flat lay', fmt: 'Imagen 1:1',
+    build: (g) => `Top-down flat lay, 35mm lens, perfectly parallel to the surface: ${g.product} arranged neatly on a warm neutral surface with small authentic props of the trade around the edges. Soft even daylight, gentle shadows, crisp textures, photorealistic commercial photography, square 1:1 composition. No text, no logos, no watermarks.` },
+};
+
+function psShowPrompt(prompt, extra) {
+  window._pbCopy = [prompt];
+  document.getElementById('ps-out').innerHTML = `
+    <div class="ad-card" style="margin-top:0.8rem">
+      <pre style="white-space:pre-wrap;font-size:0.88rem;margin-bottom:0.6rem">${esc(prompt)}</pre>
+      <button class="btn btn-primary btn-sm" data-pcopy="0">📋 Copiar prompt</button>
+      ${extra || ''}
+      <a class="btn btn-ghost btn-sm" href="https://higgsfield.ai" target="_blank" rel="noopener">Abrir Higgsfield ↗</a>
+    </div>`;
+}
+
 function psBuild() {
   const g = PS_GIROS[document.getElementById('ps-giro').value];
   const goal = PS_GOALS[document.getElementById('ps-goal').value];
@@ -576,14 +617,7 @@ function psBuild() {
     const aspect = format === 'img11' ? 'Square 1:1 composition' : 'Vertical 4:5 composition';
     prompt = `${pick(goal.cams)} of ${subject}. ${style.tail}. ${aspect}. ${clean}`;
   }
-  window._pbCopy = [prompt];
-  document.getElementById('ps-out').innerHTML = `
-    <div class="ad-card" style="margin-top:0.8rem">
-      <pre style="white-space:pre-wrap;font-size:0.88rem;margin-bottom:0.6rem">${esc(prompt)}</pre>
-      <button class="btn btn-primary btn-sm" data-pcopy="0">📋 Copiar prompt</button>
-      <button class="btn btn-ghost btn-sm" id="ps-gen2">🎲 Otra variación</button>
-      <a class="btn btn-ghost btn-sm" href="https://higgsfield.ai" target="_blank" rel="noopener">Abrir Higgsfield ↗</a>
-    </div>`;
+  psShowPrompt(prompt, '<button class="btn btn-ghost btn-sm" id="ps-gen2">🎲 Otra variación</button>');
 }
 
 async function renderPromptStudio() {
@@ -601,6 +635,16 @@ async function renderPromptStudio() {
       </div>
       <div style="margin-top:0.8rem"><button class="btn btn-primary" id="ps-gen">✨ Generar prompt</button></div>
       <div id="ps-out"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>⚡ Recetas go-to (usan el giro elegido arriba)</h3></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0.6rem">
+        ${Object.entries(PS_RECIPES).map(([k, r]) => `
+          <button class="btn btn-ghost" data-psrecipe="${k}" style="text-align:left;display:block;padding:0.7rem 0.9rem">
+            <strong>${r.label}</strong><br><span class="small" style="color:var(--ink-muted)">${r.fmt}</span>
+          </button>`).join('')}
+      </div>
+      <p class="small" style="color:var(--ink-muted);margin-top:0.6rem">Cada receta arma el prompt completo para el giro seleccionado — un clic, copiar, pegar en Higgsfield. El texto de la promo se agrega después en CapCut/Canva, nunca en el prompt.</p>
     </div>
     <div class="panel">
       <div class="panel-head"><h3>El flujo completo (3 minutos por anuncio)</h3></div>
@@ -1297,6 +1341,8 @@ main.addEventListener('click', async (e) => {
     }
     if (d.restore) { document.getElementById('restore-file').click(); return; }
     if (e.target.id === 'ps-gen' || e.target.id === 'ps-gen2') { psBuild(); return; }
+    const rbtn = e.target.closest('[data-psrecipe]');
+    if (rbtn) { const g = PS_GIROS[document.getElementById('ps-giro').value]; psShowPrompt(PS_RECIPES[rbtn.dataset.psrecipe].build(g)); return; }
     if (d.copyPost !== undefined && window._postCache) {
       navigator.clipboard.writeText(window._postCache[Number(d.copyPost)].caption);
       toast('Texto copiado ✓ — pégalo en Meta Business Suite');

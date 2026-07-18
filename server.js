@@ -830,6 +830,13 @@ admin.delete('/clients/:id', (req, res) => {
   res.json({ ok: store.deleteClient(req.params.id) });
 });
 
+// Toggle one step of a client's onboarding protocol
+admin.post('/clients/:id/tasks/:taskId/toggle', (req, res) => {
+  const client = store.toggleClientTask(req.params.id, req.params.taskId);
+  if (!client) return res.status(404).json({ error: 'Client or task not found' });
+  res.json(client);
+});
+
 // ---- payments ----
 admin.get('/payments', (req, res) => {
   const byClient = new Map(store.db.clients.map((c) => [c.id, c]));

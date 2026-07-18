@@ -962,6 +962,66 @@ admin.get('/campaigns', (req, res) => {
   );
 });
 
+// ---- content calendar (posts) ----
+admin.get('/posts', (req, res) => {
+  const byClient = new Map(store.db.clients.map((c) => [c.id, c]));
+  res.json(
+    store.db.posts
+      .slice()
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((p) => ({
+        ...p,
+        clientName: p.clientId ? (byClient.get(p.clientId)?.business || byClient.get(p.clientId)?.name || '(cliente borrado)') : 'Your LocalLift',
+      }))
+  );
+});
+
+admin.post('/posts', (req, res) => {
+  const b = req.body || {};
+  if (!String(b.caption || '').trim()) return res.status(400).json({ error: 'Escribe el texto de la publicación.' });
+  res.json(store.addPost(b));
+});
+
+admin.patch('/posts/:id', (req, res) => {
+  const p = store.updatePost(req.params.id, req.body || {});
+  if (!p) return res.status(404).json({ error: 'Post not found' });
+  res.json(p);
+});
+
+admin.delete('/posts/:id', (req, res) => res.json({ ok: store.deletePost(req.params.id) }));
+
+// Turn an AI campaign into dated posts: its ads spread over the next 4 weeks (Mon/Wed/Fri)
+admin.post('/campaigns/:id/schedule', (req, res) => {
+  const k = store.db.campaigns.find((x) => x.id === req.params.id);
+  if (!k || !k.plan) return res.status(404).json({ error: 'Campaign not found' });
+
+  const ads = Array.isArray(k.plan.ads) ? k.plan.ads : [];
+  const weeks = Array.isArray(k.plan.weeklyCalendar) ? k.plan.weeklyCalendar : [];
+  if (!ads.length) return res.status(400).json({ error: 'Esta campaña no tiene anuncios que calendarizar.' });
+
+  // Publishing days: next Mon/Wed/Fri, one slot per ad+week combo (max 12)
+  const slots = [];
+  const d = new Date();
+  while (slots.length < Math.min(12, Math.max(ads.length * 2, 6))) {
+    d.setDate(d.getDate() + 1);
+    if ([1, 3, 5].includes(d.getDay())) slots.push(d.toISOString().slice(0, 10));
+  }
+
+  const created = [];
+  slots.forEach((date, i) => {
+    const ad = ads[i % ads.length];
+    const week = weeks[Math.floor(i / 3) % (weeks.length || 1)];
+    const caption = [ad.headline, '', ad.primaryText, '', `➡ ${ad.cta || 'Más información'} — yourlocallift.com`]
+      .join('\n').trim();
+    created.push(store.addPost({
+      clientId: k.clientId, campaignId: k.id, date,
+      network: ad.platform || 'Instagram/Facebook',
+      caption: week ? `${caption}\n\n(Semana: ${week.focus})` : caption,
+    }));
+  });
+  res.json({ ok: true, created: created.length });
+});
+
 admin.post('/clients/:id/campaigns', async (req, res) => {
   const client = store.db.clients.find((c) => c.id === req.params.id);
   if (!client) return res.status(404).json({ error: 'Client not found' });

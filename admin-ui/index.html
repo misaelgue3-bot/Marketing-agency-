@@ -180,6 +180,7 @@
       <button data-tab="clients"><span class="ico">👥</span> Clients</button>
       <button data-tab="payments"><span class="ico">💵</span> Payments</button>
       <button data-tab="campaigns"><span class="ico">✨</span> AI Campaigns</button>
+      <button data-tab="posts"><span class="ico">📅</span> Publicaciones</button>
       <button data-tab="outbox"><span class="ico">📤</span> Outbox</button>
       <button data-tab="settings"><span class="ico">⚙️</span> Settings</button>
     </nav>
@@ -446,6 +447,7 @@ async function renderCampaigns() {
           </td>
           <td style="white-space:nowrap">
             <button class="btn btn-teal btn-sm" data-view="${k.id}">Open</button>
+            <button class="btn btn-primary btn-sm" data-sched="${k.id}" title="Crear publicaciones con fecha a partir de esta campaña">📅 → Calendario</button>
             <button class="btn btn-ghost btn-sm" data-del-campaign="${k.id}">Delete</button>
           </td>
         </tr>`).join('')}</tbody>
@@ -484,6 +486,63 @@ function showCampaign(k, clientName) {
     <details style="margin-top:0.6rem"><summary style="cursor:pointer;font-weight:600">Marco's raw brainstorm</summary><pre style="white-space:pre-wrap;font-size:0.82rem;color:var(--ink-soft);margin-top:0.5rem">${esc(k.brainstorm)}</pre></details>
   `;
   $('#modal').showModal();
+}
+
+/* ================= Publicaciones (content calendar) ================= */
+
+const PUB_STATUS = { 'por-hacer': '✏️ Por hacer', 'listo': '👍 Listo', 'publicado': '✅ Publicado' };
+
+async function renderPosts() {
+  const [posts, clients] = await Promise.all([api('/posts'), api('/clients')]);
+  window._postCache = posts;
+  const today = new Date().toISOString().slice(0, 10);
+  const due = posts.filter((p) => p.date <= today && p.status !== 'publicado');
+  const upcoming = posts.filter((p) => p.date > today && p.status !== 'publicado');
+  const done = posts.filter((p) => p.status === 'publicado');
+
+  const row = (p, i) => `
+    <tr>
+      <td style="white-space:nowrap">${esc(p.date)}${p.date < today && p.status !== 'publicado' ? ' <span class="pill new">atrasada</span>' : ''}</td>
+      <td>${esc(p.clientName)}</td>
+      <td><span class="pill contacted">${esc(p.network)}</span></td>
+      <td style="max-width:340px"><div style="white-space:pre-wrap;font-size:0.84rem;max-height:4.6em;overflow:hidden">${esc(p.caption)}</div></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-teal btn-sm" data-copy-post="${i}">📋 Copiar</button>
+        ${p.status !== 'publicado' ? `<button class="btn btn-primary btn-sm" data-mark-pub="${p.id}">✓ Publicado</button>` : ''}
+        <button class="btn btn-ghost btn-sm" data-del-post="${p.id}">✕</button>
+      </td>
+    </tr>`;
+
+  const table = (list) => `<div class="table-wrap"><table>
+    <thead><tr><th>Fecha</th><th>Cliente</th><th>Red</th><th>Texto</th><th></th></tr></thead>
+    <tbody>${list.map((p) => row(p, posts.indexOf(p))).join('')}</tbody></table></div>`;
+
+  main.innerHTML = `
+    <h2>📅 Publicaciones</h2>
+    <p style="color:var(--ink-soft);margin-bottom:1rem">El flujo que sí funciona hoy: <strong>1)</strong> copia el texto de aquí, <strong>2)</strong> prográmalo oficial y gratis en <a href="https://business.facebook.com/latest/composer" target="_blank" rel="noopener"><strong>Meta Business Suite ↗</strong></a> (Instagram + Facebook a la vez), <strong>3)</strong> márcalo ✓ Publicado. Genera el mes completo desde una campaña con "📅 → Calendario".</p>
+
+    <div class="panel">
+      <div class="panel-head"><h3>🔥 Para publicar hoy (${due.length})</h3></div>
+      ${due.length ? table(due) : '<div class="empty">Nada pendiente para hoy. 🎉</div>'}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Próximas (${upcoming.length})</h3></div>
+      ${upcoming.length ? table(upcoming) : '<div class="empty">No hay publicaciones programadas. Ve a AI Campaigns → "📅 → Calendario", o agrega una abajo.</div>'}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Agregar publicación</h3></div>
+      <form class="grid" id="post-form">
+        <label>Cliente<select name="clientId"><option value="">Your LocalLift (mi cuenta)</option>${clients.map((c) => `<option value="${c.id}">${esc(c.business || c.name)}</option>`).join('')}</select></label>
+        <label>Fecha<input name="date" type="date" value="${today}" required></label>
+        <label>Red<select name="network"><option>Instagram/Facebook</option><option>Instagram</option><option>Facebook</option><option>Google Business</option><option>TikTok</option></select></label>
+        <label class="full">Texto de la publicación<textarea name="caption" rows="3" required placeholder="El texto completo, listo para copiar y pegar…"></textarea></label>
+        <div><button class="btn btn-primary">Agregar al calendario</button></div>
+      </form>
+    </div>
+
+    ${done.length ? `<div class="panel"><details><summary style="cursor:pointer;font-weight:700">✅ Publicadas (${done.length})</summary>${table(done.slice().reverse().slice(0, 30))}</details></div>` : ''}`;
 }
 
 /* ================= Outbox ================= */
@@ -1092,6 +1151,17 @@ main.addEventListener('click', async (e) => {
       return;
     }
     if (d.restore) { document.getElementById('restore-file').click(); return; }
+    if (d.copyPost !== undefined && window._postCache) {
+      navigator.clipboard.writeText(window._postCache[Number(d.copyPost)].caption);
+      toast('Texto copiado ✓ — pégalo en Meta Business Suite');
+      return;
+    }
+    if (d.markPub) { await api('/posts/' + d.markPub, { method: 'PATCH', body: { status: 'publicado' } }); toast('✅ Marcada como publicada'); renderPosts(); }
+    if (d.delPost && confirm('¿Borrar esta publicación del calendario?')) { await api('/posts/' + d.delPost, { method: 'DELETE' }); renderPosts(); }
+    if (d.sched) {
+      const r = await api('/campaigns/' + d.sched + '/schedule', { method: 'POST' });
+      toast(`📅 ${r.created} publicaciones creadas — míralas en Publicaciones`);
+    }
     if (d.convert) {
       const fee = prompt('Monthly fee for this client ($)?', '399');
       if (fee === null) return;
@@ -1151,13 +1221,14 @@ main.addEventListener('submit', async (e) => {
     if (e.target.id === 'prospect-form') { await api('/prospects', { method: 'POST', body }); toast('Prospecto agregado 📞'); renderProspects(); }
     if (e.target.id === 'prospect-bulk') { const r = await api('/prospects/bulk', { method: 'POST', body }); toast(r.added + ' prospectos importados 📥'); renderProspects(); }
     if (e.target.id === 'payment-form') { await api('/payments', { method: 'POST', body }); toast('Payment recorded 💸'); renderPayments(); }
+    if (e.target.id === 'post-form') { await api('/posts', { method: 'POST', body }); toast('Publicación agregada 📅'); renderPosts(); }
     if (e.target.id === 'settings-form') { await api('/settings', { method: 'PATCH', body }); toast('Saved — your live site is updated ✨'); renderSettings(); }
   } catch (err) { alert(err.message); }
 });
 
 /* ================= Router ================= */
 
-const tabs = { dashboard: renderDashboard, playbook: renderPlaybook, prospects: renderProspects, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns, outbox: renderOutbox, settings: renderSettings };
+const tabs = { dashboard: renderDashboard, playbook: renderPlaybook, prospects: renderProspects, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns, posts: renderPosts, outbox: renderOutbox, settings: renderSettings };
 
 $('#nav').addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-tab]');

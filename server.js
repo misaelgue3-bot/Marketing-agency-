@@ -26,6 +26,7 @@ const mailer = require('./lib/mailer');
 const automations = require('./lib/automations');
 const telegram = require('./lib/telegram');
 const stripePay = require('./lib/stripe');
+const agreement = require('./lib/agreement');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -668,6 +669,13 @@ app.get('/admin', requireAdmin, (req, res) => {
 // Internal marketing studio: the 2D animated ad spots (recordable to video)
 app.get('/admin/animaciones', requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-ui', 'animaciones.html'));
+});
+
+// Printable per-client Service Plan: what they pay for, deliverables, timeline
+app.get('/admin/clients/:id/plan', requireAdmin, (req, res) => {
+  const client = store.db.clients.find((c) => c.id === req.params.id);
+  if (!client) return res.status(404).send('Cliente no encontrado');
+  res.type('html').send(agreement.render(client, store.db.settings));
 });
 
 /* ============================================================

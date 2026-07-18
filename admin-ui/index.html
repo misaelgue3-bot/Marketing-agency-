@@ -362,6 +362,7 @@ async function renderClients() {
             <select data-client-status="${c.id}" aria-label="Estado">
               ${Object.entries(CSTATUS).map(([k, v]) => `<option value="${k}" ${c.status === k ? 'selected' : ''}>${v}</option>`).join('')}
             </select>
+            <a class="btn btn-primary btn-sm" href="/admin/clients/${c.id}/plan" target="_blank" rel="noopener" title="Documento oficial: qué incluye su plan, entregables y tiempos">📄 Plan de Servicio</a>
             <button class="btn btn-teal btn-sm" data-gen="${c.id}">✨ Campaña</button>
             <button class="btn btn-ghost btn-sm" data-msg="${c.id}">💬 Mensaje</button>
             <button class="btn btn-ghost btn-sm" data-del-client="${c.id}">✕</button>

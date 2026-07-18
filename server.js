@@ -716,9 +716,50 @@ admin.get('/overview', (req, res) => {
   });
 });
 
+// ---- backups: download the whole database as a file ----
+admin.get('/backup', (req, res) => {
+  const stamp = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Disposition', `attachment; filename="locallift-respaldo-${stamp}.json"`);
+  res.json(store.db);
+});
+
+admin.get('/backups', (req, res) => res.json({ dataDir: store.DATA_DIR, backups: store.listBackups() }));
+
+// Restore from a previously downloaded backup file (replaces current data)
+admin.post('/restore', (req, res) => {
+  const b = req.body || {};
+  if (!Array.isArray(b.leads) || !Array.isArray(b.clients)) {
+    return res.status(400).json({ error: 'Ese archivo no parece un respaldo de LocalLift (faltan leads/clients).' });
+  }
+  store.backupNow(); // keep a copy of whatever is there before replacing
+  for (const key of ['leads', 'clients', 'payments', 'campaigns', 'outbox', 'prospects']) {
+    if (Array.isArray(b[key])) store.db[key] = b[key];
+  }
+  if (b.settings && typeof b.settings === 'object') Object.assign(store.db.settings, b.settings);
+  store.persist();
+  res.json({ ok: true, clients: store.db.clients.length, leads: store.db.leads.length, prospects: store.db.prospects.length });
+});
+
 // ---- system health: the true, live state of every integration ----
 admin.get('/health', (req, res) => {
+  const onRender = Boolean(process.env.RENDER || process.env.RENDER_EXTERNAL_URL);
+  let dataDirMounted = false;
+  try {
+    const mounts = fs.readFileSync('/proc/mounts', 'utf8');
+    dataDirMounted = mounts.split('\n').some((line) => {
+      const mnt = line.split(' ')[1] || '';
+      return mnt && mnt !== '/' && store.DATA_DIR.startsWith(mnt);
+    });
+  } catch { /* not linux — local dev */ }
+  const diskChecks = onRender ? [{
+    key: 'disk', label: 'Disco persistente (tus datos)', critical: true,
+    ok: dataDirMounted,
+    onMsg: `Tus leads, clientes y pagos sobreviven cada deploy (guardados en ${store.DATA_DIR}).`,
+    offMsg: 'SIN DISCO: cada deploy BORRA leads, clientes y pagos. Esto es lo que causó la pérdida de datos.',
+    how: 'Render → tu servicio → pestaña "Disks" → Add Disk → Mount Path: /var/data → 1 GB → Save. Luego en Environment agrega la variable DATA_DIR con valor /var/data y espera el redeploy. Desde entonces los datos sobreviven deploys y reinicios.',
+  }] : [];
   const checks = [
+    ...diskChecks,
     {
       key: 'stripe', label: 'Cobros con tarjeta (Stripe)', critical: true,
       ok: stripePay.available(),
@@ -1044,4 +1085,9 @@ app.listen(PORT, () => {
   if (process.env.AUTO_CAMPAIGNS === 'true') console.log('Auto-campaigns: ON — monthly campaigns generate themselves.');
   if (telegram.start()) console.log('Telegram: Sofía answers the bot chat live.');
   else console.log('Tip: set TELEGRAM_BOT_TOKEN in .env and Sofía will answer a Telegram bot 24/7.');
+
+  // Safety net: snapshot the database on boot and every 6 hours.
+  const first = store.backupNow();
+  if (first) console.log(`Backup: ${first} (kept in ${store.DATA_DIR}/backups, last 40 copies)`);
+  setInterval(() => store.backupNow(), 6 * 60 * 60 * 1000).unref();
 });

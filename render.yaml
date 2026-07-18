@@ -62,8 +62,14 @@ services:
         value: "false"
       - key: WEEKLY_DIGEST
         value: "false"
-    # Persistent disk (paid plan): data/db.json survives restarts & deploys
+      # Where the JSON database lives — must match the disk mountPath below.
+      # IMPORTANT: if the service was created manually (not as a Blueprint),
+      # this file is IGNORED — add the disk by hand: service → Disks →
+      # Add Disk → Mount Path /var/data → 1 GB, and add env DATA_DIR=/var/data.
+      - key: DATA_DIR
+        value: /var/data
+    # Persistent disk (paid plan): db.json + backups survive restarts & deploys
     disk:
       name: locallift-data
-      mountPath: /opt/render/project/src/data
+      mountPath: /var/data
       sizeGB: 1

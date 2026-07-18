@@ -627,7 +627,26 @@ async function renderSettings() {
         <div><button class="btn btn-primary">Save — updates the live site</button></div>
       </form>
       <p class="small" style="color:var(--ink-muted);margin-top:0.8rem">Applies to both the Spanish and English pages. Tip: after changing prices, check the pricing section on your site to confirm it looks right.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>🛟 Respaldos de tus datos</h3></div>
+      <p class="small" style="color:var(--ink-muted);margin:0 0 0.8rem">El servidor guarda una copia automática al arrancar y cada 6 horas. Además, descarga tu propia copia cuando quieras — especialmente antes de cualquier cambio grande.</p>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center">
+        <a class="btn btn-primary" href="/api/admin/backup" download>⬇ Descargar respaldo completo</a>
+        <button class="btn btn-ghost" data-restore="1">⬆ Restaurar desde un archivo</button>
+        <input type="file" id="restore-file" accept="application/json" hidden>
+      </div>
+      <div id="backup-list" class="small" style="color:var(--ink-muted);margin-top:0.8rem">Cargando respaldos automáticos…</div>
     </div>`;
+
+  api('/backups').then((b) => {
+    const el = document.getElementById('backup-list');
+    if (!el) return;
+    el.innerHTML = b.backups.length
+      ? `Copias automáticas en el servidor (${esc(b.dataDir)}/backups):<br>` +
+        b.backups.slice(0, 8).map((x) => `· ${esc(x.file)} (${(x.bytes / 1024).toFixed(1)} KB)`).join('<br>')
+      : 'Aún no hay copias automáticas en el servidor (se crea una al arrancar y cada 6 horas).';
+  }).catch(() => {});
 }
 
 /* ================= Mi Campaña (playbook) ================= */
@@ -1051,6 +1070,16 @@ main.addEventListener('change', async (e) => {
       toast(done === (client.tasks || []).length ? '🎉 ¡Protocolo completo!' : 'Paso guardado ✓ (' + done + '/' + client.tasks.length + ')');
       renderClients();
     }
+    if (e.target.id === 'restore-file' && e.target.files && e.target.files[0]) {
+      const text = await e.target.files[0].text();
+      let data;
+      try { data = JSON.parse(text); } catch { return alert('Ese archivo no es un respaldo válido (no es JSON).'); }
+      const n = (data.clients || []).length;
+      if (!confirm(`Este respaldo tiene ${n} cliente(s), ${(data.leads || []).length} lead(s) y ${(data.prospects || []).length} prospecto(s).\n\n¿Reemplazar los datos actuales con este respaldo?`)) return;
+      const r = await api('/restore', { method: 'POST', body: data });
+      toast(`Restaurado ✓ — ${r.clients} clientes, ${r.leads} leads, ${r.prospects} prospectos`);
+      renderDashboard();
+    }
   } catch (err) { alert(err.message); }
 });
 
@@ -1062,6 +1091,7 @@ main.addEventListener('click', async (e) => {
       toast('Copiado al portapapeles ✓');
       return;
     }
+    if (d.restore) { document.getElementById('restore-file').click(); return; }
     if (d.convert) {
       const fee = prompt('Monthly fee for this client ($)?', '399');
       if (fee === null) return;

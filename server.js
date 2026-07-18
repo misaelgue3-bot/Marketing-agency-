@@ -716,6 +716,49 @@ admin.get('/overview', (req, res) => {
   });
 });
 
+// ---- system health: the true, live state of every integration ----
+admin.get('/health', (req, res) => {
+  const checks = [
+    {
+      key: 'stripe', label: 'Cobros con tarjeta (Stripe)', critical: true,
+      ok: stripePay.available(),
+      onMsg: 'Puedes cobrar planes y proyectos web.',
+      offMsg: 'Falta STRIPE_SECRET_KEY. Sin esto, el botón de pago no cobra.',
+      how: 'Render → tu servicio → Environment → agrega STRIPE_SECRET_KEY con tu clave sk_live_… de stripe.com.',
+    },
+    {
+      key: 'stripeWebhook', label: 'Pago → cliente automático (webhook)', critical: true,
+      ok: stripePay.webhookReady(),
+      onMsg: 'Cada pago crea el cliente y lo registra solo.',
+      offMsg: 'Falta STRIPE_WEBHOOK_SECRET. Cobras, pero el cliente no se registra solo.',
+      how: 'stripe.com → Developers → Webhooks → agrega endpoint https://yourlocallift.com/api/stripe/webhook (eventos checkout.session.completed, invoice.paid, invoice.payment_failed) → copia el Signing secret whsec_… a Render como STRIPE_WEBHOOK_SECRET.',
+    },
+    {
+      key: 'ai', label: 'Sofía inteligente (IA)', critical: false,
+      ok: agents.available(),
+      onMsg: `Sofía responde sola con ${agents.providerLabel()}.`,
+      offMsg: 'Sin clave de IA, Sofía solo da una respuesta fija y captura el contacto.',
+      how: 'Render → Environment → agrega ANTHROPIC_API_KEY (de console.anthropic.com) o GROQ_API_KEY.',
+    },
+    {
+      key: 'telegram', label: 'Bot de Telegram / avisos', critical: false,
+      ok: telegram.available(),
+      onMsg: 'Recibes cada lead y pago en tu Telegram al instante.',
+      offMsg: 'Sin el token, no llegan los avisos por Telegram.',
+      how: 'Habla con @BotFather en Telegram → crea el bot → copia el token a Render como TELEGRAM_BOT_TOKEN.',
+    },
+    {
+      key: 'email', label: 'Avisos por correo', critical: false,
+      ok: mailer.available() && Boolean(process.env.NOTIFY_EMAIL),
+      onMsg: 'Recibes cada lead y pago por email.',
+      offMsg: 'Opcional. Sin SMTP no llegan avisos por correo (los de Telegram sí).',
+      how: 'Render → Environment → SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS y NOTIFY_EMAIL (tu correo).',
+    },
+  ];
+  const criticalReady = checks.filter((c) => c.critical).every((c) => c.ok);
+  res.json({ criticalReady, checks });
+});
+
 // ---- leads ----
 admin.get('/leads', (req, res) => res.json(store.db.leads.slice().reverse()));
 

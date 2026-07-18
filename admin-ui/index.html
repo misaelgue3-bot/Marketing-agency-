@@ -120,6 +120,22 @@
   .notice.warn { background: rgba(255, 199, 84, 0.09); border-color: rgba(255, 199, 84, 0.3); color: var(--warn); }
   .notice.ok { background: rgba(79, 208, 140, 0.09); border-color: rgba(79, 208, 140, 0.28); color: var(--good); }
 
+  /* ---------- system health ---------- */
+  .hlist { display: grid; gap: 0.55rem; }
+  .hrow { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.7rem 0.85rem; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); }
+  .hrow.on { border-color: rgba(79, 208, 140, 0.28); }
+  .hrow.crit { border-color: rgba(255, 122, 110, 0.4); background: rgba(255, 122, 110, 0.06); }
+  .hdot { flex: none; width: 1.5rem; height: 1.5rem; border-radius: 999px; display: grid; place-items: center; font-size: 0.8rem; font-weight: 800; }
+  .hrow.on .hdot { background: rgba(79, 208, 140, 0.16); color: var(--good); }
+  .hrow.crit .hdot { background: rgba(255, 122, 110, 0.16); color: var(--bad); }
+  .hrow.off .hdot { background: rgba(255, 255, 255, 0.08); color: var(--ink-muted); }
+  .htitle { font-weight: 700; font-size: 0.9rem; }
+  .hreq { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--bad); background: rgba(255, 122, 110, 0.14); padding: 0.05rem 0.4rem; border-radius: 999px; margin-left: 0.35rem; }
+  .hmsg { font-size: 0.82rem; color: var(--ink-muted); margin-top: 0.15rem; }
+  .hhow { margin-top: 0.4rem; }
+  .hhow summary { cursor: pointer; font-size: 0.8rem; font-weight: 600; color: var(--gold, #e8b64c); }
+  .hhow p { font-size: 0.82rem; color: var(--ink-soft); margin-top: 0.4rem; line-height: 1.5; }
+
   dialog { border: 1px solid var(--line); border-radius: var(--radius); padding: 0; max-width: 760px; width: 92%; max-height: 85vh; background: var(--surface); color: var(--ink); }
   dialog::backdrop { background: rgba(6, 12, 14, 0.72); }
   .dialog-body { padding: 1.4rem; overflow-y: auto; max-height: 85vh; }
@@ -206,14 +222,30 @@ function toast(msg) {
 /* ================= Dashboard ================= */
 
 async function renderDashboard() {
-  const o = await api('/overview');
+  const [o, health] = await Promise.all([api('/overview'), api('/health')]);
   const max = Math.max(...o.revenueByMonth.map((m) => m.revenue), 1);
   const monthName = (key) => new Date(key + '-15').toLocaleString('en-US', { month: 'short' });
 
+  const healthRow = (c) => `
+    <div class="hrow ${c.ok ? 'on' : (c.critical ? 'crit' : 'off')}">
+      <span class="hdot">${c.ok ? '✓' : (c.critical ? '✕' : '○')}</span>
+      <div class="hbody">
+        <div class="htitle">${esc(c.label)}${c.critical && !c.ok ? ' <span class="hreq">necesario para cobrar</span>' : ''}</div>
+        <div class="hmsg">${c.ok ? esc(c.onMsg) : esc(c.offMsg)}</div>
+        ${!c.ok ? `<details class="hhow"><summary>Cómo activarlo</summary><p>${esc(c.how)}</p></details>` : ''}
+      </div>
+    </div>`;
+
   main.innerHTML = `
-    <h2>Dashboard</h2>
-    ${o.aiEnabled ? `<div class="notice ok">AI team is on — running on <strong>${esc(o.aiProvider)}</strong>.</div>` : `<div class="notice warn">The AI team is off — add <strong>ANTHROPIC_API_KEY</strong> (Claude, best quality) or <strong>GROQ_API_KEY</strong> (Groq, free tier) to your .env to turn on Sofía, Marco, Lucía and Valen.</div>`}
-    ${o.aiEnabled && !o.imagesEnabled ? `<div class="notice warn">Ad images are off — add <strong>HIGGSFIELD_API_KEY</strong> + <strong>HIGGSFIELD_API_SECRET</strong> to let Valen generate real ad visuals.</div>` : ''}
+    <h2>📊 Dashboard</h2>
+    <div class="panel">
+      <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center">
+        <h3>Estado del sistema</h3>
+        <span class="pill ${health.criticalReady ? 'active' : 'new'}">${health.criticalReady ? '💰 Listo para cobrar' : '⚠️ Aún no puede cobrar'}</span>
+      </div>
+      <div class="hlist">${health.checks.map(healthRow).join('')}</div>
+    </div>
+    ${o.aiEnabled && !o.imagesEnabled ? `<div class="notice warn">Las imágenes de anuncios están apagadas — agrega <strong>HIGGSFIELD_API_KEY</strong> + <strong>HIGGSFIELD_API_SECRET</strong> para que Valen genere visuales reales.</div>` : ''}
     ${o.automations ? `<div class="panel" style="padding:0.9rem 1.2rem;margin-bottom:1.3rem">
       <strong style="font-size:0.85rem">Autopilot:</strong>
       ${[

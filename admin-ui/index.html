@@ -576,19 +576,62 @@ const PS_STYLES = {
 const PS_MOVES = ['Slow Dolly In toward', 'Crane Up slowly revealing', 'Slow 360 Orbit around', 'Handheld push-in toward'];
 
 
+const PS_CATS = { producto: '🍽 Producto & comida', gente: '🤳 Gente & social', promo: '🎁 Promo & temporada', lugar: '📍 Lugar & ambiente', marca: '✨ Marca & historia' };
+const NT = 'No text, no logos, no watermarks, natural proportions and hands.';
 const PS_RECIPES = {
-  fotoshoot: { label: '📸 Photo shoot de producto', fmt: 'Imagen 4:5',
-    build: (g) => `Studio product photography, 100mm macro lens, shallow depth of field, of ${g.product} on a seamless warm cream backdrop. Soft diffused key light from the left, gentle golden rim light from behind, ${g.detail}. Crisp textures, photorealistic commercial photography, vertical 4:5 composition. No text, no logos, no watermarks, natural proportions.` },
-  ugc: { label: '🤳 UGC estilo cliente', fmt: 'Video 9:16 · 5s',
-    build: (g) => `Aspect ratio 9:16, duration 5s.\nHandheld selfie-style vertical video with slight natural camera shake: a smiling customer holds ${g.product} up toward the lens inside ${g.place}. Natural daylight from a window, casual authentic phone-camera look, mild motion blur, one continuous handheld move that settles at the end. No text, no logos, natural hands and faces.` },
-  retrato: { label: '👤 Retrato del dueño', fmt: 'Imagen 4:5',
-    build: (g) => `Environmental portrait, 50mm lens at eye level, of ${g.worker}, pausing to face the camera with quiet pride in ${g.place}. Warm practical lights glowing in the background, golden hour light through the front window, shallow depth of field. Photorealistic editorial photography, vertical 4:5 composition. No text, no logos, natural proportions and hands.` },
-  antesdespues: { label: '🔄 Antes / Después', fmt: 'Imagen 4:5 (2 imágenes)',
+  // ---- Producto & comida ----
+  fotoshoot: { cat: 'producto', label: '📸 Photo shoot de producto', fmt: 'Imagen 4:5',
+    build: (g) => `Studio product photography, 100mm macro lens, shallow depth of field, of ${g.product} on a seamless warm cream backdrop. Soft diffused key light from the left, gentle golden rim light from behind, ${g.detail}. Crisp textures, photorealistic commercial photography, vertical 4:5 composition. ${NT}` },
+  heroshot: { cat: 'producto', label: '🦸 Hero shot dramático', fmt: 'Imagen 4:5',
+    build: (g) => `Dramatic hero product shot, 85mm lens, low three-quarter angle looking slightly up at ${g.product}. Single warm spotlight from above, deep soft shadows, dark moody background, ${g.detail}. High-contrast photorealistic commercial photography, vertical 4:5 composition. ${NT}` },
+  flatlay: { cat: 'producto', label: '📐 Flat lay', fmt: 'Imagen 1:1',
+    build: (g) => `Top-down flat lay, 35mm lens, perfectly parallel to the surface: ${g.product} arranged neatly on a warm neutral surface with small authentic props of the trade around the edges. Soft even daylight, gentle shadows, crisp textures, photorealistic commercial photography, square 1:1 composition. ${NT}` },
+  macrotextura: { cat: 'producto', label: '💧 Macro con textura', fmt: 'Imagen 1:1',
+    build: (g) => `Extreme macro shot, 100mm macro lens, razor-thin focus plane on ${g.product}, emphasizing texture and freshness — ${g.detail}. Soft window light raking across the surface, tiny highlights, photorealistic close-up photography, square 1:1 composition. ${NT}` },
+  ingredientes: { cat: 'producto', label: '🧺 Ingredientes frescos', fmt: 'Imagen 4:5',
+    build: (g) => `Overhead styled shot, 40mm lens, of the fresh raw ingredients and tools behind ${g.product}, arranged rustically on a wooden surface, ${g.detail}. Warm natural daylight, shallow shadows, photorealistic editorial photography, vertical 4:5 composition. ${NT}` },
+  giro360: { cat: 'producto', label: '🔁 Giro 360 del producto', fmt: 'Video 1:1 · 5s',
+    build: (g) => `Aspect ratio 1:1, duration 5s.\nSlow 360 orbit around ${g.product} on a clean warm surface, ${g.detail}. One continuous smooth camera move, soft studio lighting, natural physics, motion settles at the end. Photorealistic. ${NT}` },
+  // ---- Gente & social ----
+  ugc: { cat: 'gente', label: '🤳 UGC estilo cliente', fmt: 'Video 9:16 · 5s',
+    build: (g) => `Aspect ratio 9:16, duration 5s.\nHandheld selfie-style vertical video with slight natural camera shake: a smiling customer holds ${g.product} up toward the lens inside ${g.place}. Natural daylight from a window, casual authentic phone-camera look, mild motion blur, one continuous handheld move that settles at the end. ${NT}` },
+  retrato: { cat: 'gente', label: '👤 Retrato del dueño', fmt: 'Imagen 4:5',
+    build: (g) => `Environmental portrait, 50mm lens at eye level, of ${g.worker}, pausing to face the camera with quiet pride in ${g.place}. Warm practical lights glowing in the background, golden hour light through the front window, shallow depth of field. Photorealistic editorial photography, vertical 4:5 composition. ${NT}` },
+  clientefeliz: { cat: 'gente', label: '😃 Cliente feliz', fmt: 'Imagen 4:5',
+    build: (g) => `Candid photo, 50mm lens, of a genuinely happy customer enjoying ${g.product} inside ${g.place}, caught mid-laugh, natural and unposed. Warm ambient light, soft background blur, photorealistic lifestyle photography, vertical 4:5 composition. ${NT}` },
+  manos: { cat: 'gente', label: '🤲 Manos entregando', fmt: 'Imagen 1:1',
+    build: (g) => `Close-up, 60mm lens, of hands handing over ${g.product} across the counter, warm human moment, ${g.detail}. Soft natural light, shallow depth of field, photorealistic, square 1:1 composition. ${NT}` },
+  backstage: { cat: 'gente', label: '🎬 Detrás de cámaras', fmt: 'Video 9:16 · 5s',
+    build: (g) => `Aspect ratio 9:16, duration 5s.\nHandheld documentary-style vertical video, close over-the-shoulder view of ${g.worker}, ${g.detail}. Warm practical lighting, shallow depth of field, one continuous slow push-in that settles at the end, natural physics. Authentic craft feel, photorealistic. ${NT}` },
+  testimonio: { cat: 'gente', label: '💬 Testimonio a cámara', fmt: 'Video 9:16 · 5s',
+    build: (g) => `Aspect ratio 9:16, duration 5s.\nStatic vertical shot of a friendly customer sitting inside ${g.place}, talking warmly toward the camera as if giving a review, gentle natural gestures. Soft window light, shallow depth of field, one locked-off framing, subtle natural motion. Photorealistic. ${NT}` },
+  // ---- Promo & temporada ----
+  promo: { cat: 'promo', label: '🏷 Promo con espacio para texto', fmt: 'Imagen 4:5',
+    build: (g) => `${g.product} placed in the lower half of the frame on a clean warm surface, ${g.detail}, with generous uncluttered negative space in the upper third for a text overlay added later. Soft even studio light, photorealistic commercial photography, vertical 4:5 composition. ${NT}` },
+  antesdespues: { cat: 'promo', label: '🔄 Antes / Después', fmt: 'Imagen 4:5 (2 imágenes)',
     build: (g) => `IMAGE 1 (before) — Locked-off eye-level shot, 40mm lens: ${g.before}. Neutral even lighting, documentary realism, vertical 4:5 composition. No text, no logos.\n\nIMAGE 2 (after, same framing) — Identical locked-off camera position: ${g.after}. Warm golden light, crisp detail, photorealistic, vertical 4:5 composition. No text, no logos.\n\n(Genera las dos y pégalas lado a lado en CapCut/Canva.)` },
-  backstage: { label: '🎬 Detrás de cámaras', fmt: 'Video 9:16 · 5s',
-    build: (g) => `Aspect ratio 9:16, duration 5s.\nHandheld documentary-style vertical video, close over-the-shoulder view of ${g.worker}, ${g.detail}. Warm practical lighting, shallow depth of field, one continuous slow push-in that settles at the end, natural physics. Authentic craft feel, photorealistic. No text, no logos, natural hands.` },
-  flatlay: { label: '📐 Flat lay', fmt: 'Imagen 1:1',
-    build: (g) => `Top-down flat lay, 35mm lens, perfectly parallel to the surface: ${g.product} arranged neatly on a warm neutral surface with small authentic props of the trade around the edges. Soft even daylight, gentle shadows, crisp textures, photorealistic commercial photography, square 1:1 composition. No text, no logos, no watermarks.` },
+  navidad: { cat: 'promo', label: '🎄 Temporada navideña', fmt: 'Imagen 4:5',
+    build: (g) => `Festive holiday scene, 50mm lens, of ${g.product} on a warm surface surrounded by soft out-of-focus Christmas lights, pine branches and a cozy red-and-gold palette, ${g.detail}. Warm bokeh, candlelit glow, photorealistic, vertical 4:5 composition. ${NT}` },
+  diamadres: { cat: 'promo', label: '💐 Día de las Madres', fmt: 'Imagen 4:5',
+    build: (g) => `Soft tender scene, 50mm lens, of ${g.product} beside fresh flowers on a bright surface, pastel and warm tones, celebratory mood, ${g.detail}. Gentle daylight, airy and delicate, photorealistic, vertical 4:5 composition. ${NT}` },
+  finde: { cat: 'promo', label: '🎉 Especial de fin de semana', fmt: 'Video 9:16 · 5s',
+    build: (g) => `Aspect ratio 9:16, duration 5s.\nLively vertical video of ${g.place} busy on a weekend, ${g.product} in the foreground with warm energy and gentle movement in the background. Warm inviting light, one continuous slow push-in, natural physics, settles at the end. Photorealistic. ${NT}` },
+  // ---- Lugar & ambiente ----
+  fachada: { cat: 'lugar', label: '🏠 Fachada / entrada', fmt: 'Imagen 4:5',
+    build: (g) => `Wide exterior shot, 28mm lens, eye level, of the welcoming storefront entrance of ${g.place}, warm light spilling onto the sidewalk at dusk, inviting and clean. Blue-hour sky, glowing interior, photorealistic architectural photography, vertical 4:5 composition. ${NT}` },
+  interior: { cat: 'lugar', label: '🪑 Interior acogedor', fmt: 'Imagen 4:5',
+    build: (g) => `Wide interior shot, 24mm lens, of ${g.place}, warm and welcoming with gentle activity, ${g.detail}. Warm practical lights, soft natural fill, photorealistic interior photography, vertical 4:5 composition. ${NT}` },
+  recorrido: { cat: 'lugar', label: '🎥 Recorrido del lugar', fmt: 'Video 9:16 · 5s',
+    build: (g) => `Aspect ratio 9:16, duration 5s.\nSmooth vertical walkthrough of ${g.place}, gliding forward past warm details toward ${g.product}, ${g.detail}. One continuous slow dolly-in, warm ambient light, natural physics, settles at the end. Photorealistic. ${NT}` },
+  rincon: { cat: 'lugar', label: '🔎 Detalle del rincón', fmt: 'Imagen 1:1',
+    build: (g) => `Cozy detail shot, 50mm lens, of a charming corner of ${g.place} that shows craft and care, ${g.detail}. Warm practical light, shallow depth of field, photorealistic, square 1:1 composition. ${NT}` },
+  // ---- Marca & historia ----
+  cincoestrellas: { cat: 'marca', label: '⭐ Reseña visualizada', fmt: 'Imagen 1:1',
+    build: (g) => `Warm lifestyle shot, 50mm lens, of ${g.product} beautifully presented in ${g.place}, with soft golden light suggesting a five-star experience, ${g.detail}, generous clean space for a review overlay added later. Photorealistic, square 1:1 composition. ${NT}` },
+  crece: { cat: 'marca', label: '🌱 La marca crece', fmt: 'Video 9:16 · 5s',
+    build: (g) => `Aspect ratio 9:16, duration 5s.\nUplifting vertical video: ${g.product} at the center of ${g.place} as warm light gently blooms and grows brighter, a subtle sense of momentum and growth. One continuous slow crane-up, natural physics, settles at the end. Photorealistic. ${NT}` },
+  comunidad: { cat: 'marca', label: '🤝 Comunidad local', fmt: 'Imagen 4:5',
+    build: (g) => `Warm candid photo, 40mm lens, of neighbors and regulars enjoying ${g.place} together, a real sense of local community, ${g.detail}. Golden ambient light, natural and unposed, photorealistic lifestyle photography, vertical 4:5 composition. ${NT}` },
 };
 
 function psShowPrompt(prompt, extra) {
@@ -637,14 +680,18 @@ async function renderPromptStudio() {
       <div id="ps-out"></div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h3>⚡ Recetas go-to (usan el giro elegido arriba)</h3></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0.6rem">
-        ${Object.entries(PS_RECIPES).map(([k, r]) => `
-          <button class="btn btn-ghost" data-psrecipe="${k}" style="text-align:left;display:block;padding:0.7rem 0.9rem">
-            <strong>${r.label}</strong><br><span class="small" style="color:var(--ink-muted)">${r.fmt}</span>
-          </button>`).join('')}
-      </div>
-      <p class="small" style="color:var(--ink-muted);margin-top:0.6rem">Cada receta arma el prompt completo para el giro seleccionado — un clic, copiar, pegar en Higgsfield. El texto de la promo se agrega después en CapCut/Canva, nunca en el prompt.</p>
+      <div class="panel-head"><h3>⚡ Recetas go-to — ${Object.keys(PS_RECIPES).length} listas (usan el giro elegido arriba)</h3></div>
+      ${Object.entries(PS_CATS).map(([cat, catLabel]) => `
+        <div style="margin-bottom:0.9rem">
+          <div class="small" style="font-weight:700;margin-bottom:0.4rem">${catLabel}</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:0.55rem">
+            ${Object.entries(PS_RECIPES).filter(([, r]) => r.cat === cat).map(([k, r]) => `
+              <button class="btn btn-ghost" data-psrecipe="${k}" style="text-align:left;display:block;padding:0.6rem 0.85rem">
+                <strong>${r.label}</strong><br><span class="small" style="color:var(--ink-muted)">${r.fmt}</span>
+              </button>`).join('')}
+          </div>
+        </div>`).join('')}
+      <p class="small" style="color:var(--ink-muted);margin-top:0.4rem">Cada receta arma el prompt completo para el giro seleccionado — un clic, copiar, pegar en Higgsfield. El texto de la promo se agrega después en CapCut/Canva, nunca en el prompt.</p>
     </div>
     <div class="panel">
       <div class="panel-head"><h3>El flujo completo (3 minutos por anuncio)</h3></div>

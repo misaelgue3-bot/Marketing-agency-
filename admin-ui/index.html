@@ -175,6 +175,7 @@
     <nav id="nav">
       <button data-tab="dashboard" class="on"><span class="ico">📊</span> Dashboard</button>
       <button data-tab="playbook"><span class="ico">📣</span> Mi Campaña</button>
+      <button data-tab="promptstudio"><span class="ico">🎬</span> Prompts</button>
       <button data-tab="prospects"><span class="ico">📞</span> Prospectos</button>
       <button data-tab="leads"><span class="ico">📥</span> Leads</button>
       <button data-tab="clients"><span class="ico">👥</span> Clients</button>
@@ -488,6 +489,122 @@ function showCampaign(k, clientName) {
     <details style="margin-top:0.6rem"><summary style="cursor:pointer;font-weight:600">Marco's raw brainstorm</summary><pre style="white-space:pre-wrap;font-size:0.82rem;color:var(--ink-soft);margin-top:0.5rem">${esc(k.brainstorm)}</pre></details>
   `;
   $('#modal').showModal();
+}
+
+/* ================= Prompt Studio (Higgsfield) ================= */
+
+const PS_GIROS = {
+  taqueria: { label: 'Taquería / Restaurante',
+    product: 'sizzling al pastor tacos with charred pineapple on handmade corn tortillas, steam rising',
+    place: 'a lively family-run taqueria with a glowing trompo grill and colorful paper decorations',
+    worker: 'a taquero in a clean apron slicing marinated pork from the trompo with a long knife',
+    detail: 'fresh cilantro and diced onion scattered, lime wedges glistening' },
+  panaderia: { label: 'Panadería',
+    product: 'golden conchas and colorful pan dulce stacked on wooden trays, sugar crystals glistening',
+    place: 'a cozy neighborhood bakery with glass display cases full of fresh bread',
+    worker: 'a baker in a flour-dusted apron pulling a tray of hot bread from a stone oven',
+    detail: 'steam rising from fresh bread, warm crumbs on a wooden counter' },
+  salon: { label: 'Salón de belleza',
+    product: 'a glossy finished hairstyle with soft waves catching the light',
+    place: 'a bright modern beauty salon with round mirrors and warm bulb lighting',
+    worker: 'a stylist blow-drying a client\'s hair with focused, precise hands',
+    detail: 'individual hair strands lifting gently in the airflow' },
+  barberia: { label: 'Barbería',
+    product: 'a crisp fresh fade haircut with clean sharp edge lines',
+    place: 'a classic barbershop with leather chairs and vintage wood details',
+    worker: 'a barber shaping a beard with precise clipper strokes',
+    detail: 'fine hair clippings drifting through a warm beam of light' },
+  taller: { label: 'Taller mecánico',
+    product: 'a freshly polished car hood reflecting the workshop lights like a mirror',
+    place: 'an organized auto repair shop with a tool wall and a car on a lift',
+    worker: 'a mechanic in overalls tightening a bolt under a lifted car',
+    detail: 'a work lamp casting focused light across the engine bay' },
+  limpieza: { label: 'Limpieza',
+    product: 'a spotless kitchen counter gleaming after a deep clean',
+    place: 'a sunlit modern home interior, freshly cleaned, cushions perfectly placed',
+    worker: 'a cleaner in uniform wiping a large window with smooth confident strokes',
+    detail: 'squeegee lines vanishing from the glass, tiny water droplets catching sunlight' },
+  generico: { label: 'Negocio local (general)',
+    product: 'the shop\'s best-selling product displayed proudly on a clean counter',
+    place: 'a welcoming small local storefront with warm light spilling onto the sidewalk',
+    worker: 'the owner arranging products with visible care and pride',
+    detail: 'small handmade details that show craft and dedication' },
+};
+
+const PS_GOALS = {
+  antojo: { label: 'Antojo — el producto en close-up',
+    build: (g) => `${g.product}, ${g.detail}`,
+    cams: ['Macro close-up, 85mm lens, shallow depth of field', 'Extreme close-up, 100mm macro lens, razor-thin focus plane'] },
+  lugar: { label: 'El lugar — ambiente que da confianza',
+    build: (g) => `${g.place}, gentle activity in the background`,
+    cams: ['Wide establishing shot, 24mm lens, eye level', 'Wide shot from the entrance, 28mm lens, natural perspective'] },
+  equipo: { label: 'El oficio — manos trabajando',
+    build: (g) => `${g.worker}, ${g.detail}`,
+    cams: ['Medium shot, 50mm lens, slightly low angle', 'Over-the-shoulder medium close-up, 65mm lens'] },
+  promo: { label: 'Para promo — espacio limpio para texto',
+    build: (g) => `${g.product} placed in the lower half of the frame, clean uncluttered negative space in the upper third reserved for a text overlay added later in editing`,
+    cams: ['Top-down flat lay, 35mm lens', 'Slightly angled hero shot, 45-degree angle, 40mm lens'] },
+};
+
+const PS_STYLES = {
+  calido: { label: 'Foto cálida realista', tail: 'Golden-hour sunlight, warm amber tones, photorealistic commercial photography, crisp textures, high detail' },
+  cine: { label: 'Cinemático', tail: 'Moody cinematic lighting with a soft rim light, gentle contrast, subtle film grain, anamorphic feel' },
+  marca: { label: '2D estilo LocalLift', tail: 'Flat 2D vector illustration, cream background, warm gold and terracotta accents, dark ink outlines, minimal geometric shapes' },
+};
+
+const PS_MOVES = ['Slow Dolly In toward', 'Crane Up slowly revealing', 'Slow 360 Orbit around', 'Handheld push-in toward'];
+
+function psBuild() {
+  const g = PS_GIROS[document.getElementById('ps-giro').value];
+  const goal = PS_GOALS[document.getElementById('ps-goal').value];
+  const style = PS_STYLES[document.getElementById('ps-style').value];
+  const format = document.getElementById('ps-format').value;
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const subject = goal.build(g);
+  const clean = 'No text, no logos, no watermarks, natural proportions and hands.';
+  let prompt;
+  if (format === 'vid916') {
+    prompt = `Aspect ratio 9:16, duration 5s.\n${pick(PS_MOVES)} ${subject}. One continuous camera move, natural physics, motion settles at the end. ${style.tail}. ${clean}`;
+  } else {
+    const aspect = format === 'img11' ? 'Square 1:1 composition' : 'Vertical 4:5 composition';
+    prompt = `${pick(goal.cams)} of ${subject}. ${style.tail}. ${aspect}. ${clean}`;
+  }
+  window._pbCopy = [prompt];
+  document.getElementById('ps-out').innerHTML = `
+    <div class="ad-card" style="margin-top:0.8rem">
+      <pre style="white-space:pre-wrap;font-size:0.88rem;margin-bottom:0.6rem">${esc(prompt)}</pre>
+      <button class="btn btn-primary btn-sm" data-pcopy="0">📋 Copiar prompt</button>
+      <button class="btn btn-ghost btn-sm" id="ps-gen2">🎲 Otra variación</button>
+      <a class="btn btn-ghost btn-sm" href="https://higgsfield.ai" target="_blank" rel="noopener">Abrir Higgsfield ↗</a>
+    </div>`;
+}
+
+async function renderPromptStudio() {
+  const sel = (id, obj, labelKey) => `<select id="${id}">${Object.entries(obj).map(([k, v]) => `<option value="${k}">${v[labelKey] || v}</option>`).join('')}</select>`;
+  main.innerHTML = `
+    <h2>🎬 Prompts para Higgsfield</h2>
+    <p style="color:var(--ink-soft);margin-bottom:1rem">Elige el giro, qué quieres enseñar y el formato — te armo el prompt con la técnica correcta (cámara + sujeto + acción + escenario + luz + estilo, sin palabras vagas, sin texto en la imagen). El prompt sale en inglés a propósito: los modelos generan mejor así.</p>
+    <div class="panel">
+      <div class="panel-head"><h3>Arma tu prompt</h3></div>
+      <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem">
+        <label style="font-size:0.76rem;font-weight:600;color:var(--ink-soft);display:grid;gap:0.3rem">Giro del negocio${sel('ps-giro', PS_GIROS, 'label')}</label>
+        <label style="font-size:0.76rem;font-weight:600;color:var(--ink-soft);display:grid;gap:0.3rem">Qué enseñamos${sel('ps-goal', PS_GOALS, 'label')}</label>
+        <label style="font-size:0.76rem;font-weight:600;color:var(--ink-soft);display:grid;gap:0.3rem">Estilo${sel('ps-style', PS_STYLES, 'label')}</label>
+        <label style="font-size:0.76rem;font-weight:600;color:var(--ink-soft);display:grid;gap:0.3rem">Formato<select id="ps-format"><option value="img45">Imagen vertical 4:5 (feed)</option><option value="img11">Imagen cuadrada 1:1</option><option value="vid916">Video vertical 9:16 · 5s (reel)</option></select></label>
+      </div>
+      <div style="margin-top:0.8rem"><button class="btn btn-primary" id="ps-gen">✨ Generar prompt</button></div>
+      <div id="ps-out"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>El flujo completo (3 minutos por anuncio)</h3></div>
+      <ol style="padding-left:1.3rem;font-size:0.9rem;display:grid;gap:0.45rem">
+        <li><strong>Genera y copia</strong> el prompt de arriba.</li>
+        <li><strong>Abre higgsfield.ai</strong> → crea imagen (o video si elegiste reel) → pega el prompt → genera. Si no te gusta, "🎲 Otra variación" y repite.</li>
+        <li><strong>Descarga</strong> la imagen/video que te guste.</li>
+        <li><strong>Agrégala a 📅 Publicaciones</strong> con su texto, o úsala en tu campaña de anuncios en Meta.</li>
+      </ol>
+      <p class="small" style="color:var(--ink-muted);margin-top:0.6rem">Regla de oro: el texto de la promo (precios, "2×1", teléfono) se pone DESPUÉS, encima de la imagen en CapCut/Canva — nunca en el prompt. Los generadores escriben mal las letras.</p>
+    </div>`;
 }
 
 /* ================= Publicaciones (content calendar) ================= */
@@ -1153,6 +1270,7 @@ main.addEventListener('click', async (e) => {
       return;
     }
     if (d.restore) { document.getElementById('restore-file').click(); return; }
+    if (e.target.id === 'ps-gen' || e.target.id === 'ps-gen2') { psBuild(); return; }
     if (d.copyPost !== undefined && window._postCache) {
       navigator.clipboard.writeText(window._postCache[Number(d.copyPost)].caption);
       toast('Texto copiado ✓ — pégalo en Meta Business Suite');
@@ -1230,7 +1348,7 @@ main.addEventListener('submit', async (e) => {
 
 /* ================= Router ================= */
 
-const tabs = { dashboard: renderDashboard, playbook: renderPlaybook, prospects: renderProspects, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns, posts: renderPosts, outbox: renderOutbox, settings: renderSettings };
+const tabs = { dashboard: renderDashboard, playbook: renderPlaybook, promptstudio: renderPromptStudio, prospects: renderProspects, leads: renderLeads, clients: renderClients, payments: renderPayments, campaigns: renderCampaigns, posts: renderPosts, outbox: renderOutbox, settings: renderSettings };
 
 $('#nav').addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-tab]');

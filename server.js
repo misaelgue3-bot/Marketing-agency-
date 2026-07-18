@@ -27,6 +27,7 @@ const automations = require('./lib/automations');
 const telegram = require('./lib/telegram');
 const stripePay = require('./lib/stripe');
 const agreement = require('./lib/agreement');
+const report = require('./lib/report');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -676,6 +677,19 @@ app.get('/admin/clients/:id/plan', requireAdmin, (req, res) => {
   const client = store.db.clients.find((c) => c.id === req.params.id);
   if (!client) return res.status(404).send('Cliente no encontrado');
   res.type('html').send(agreement.render(client, store.db.settings));
+});
+
+// Monthly client report, auto-filled with that month's real activity
+app.get('/admin/clients/:id/report', requireAdmin, (req, res) => {
+  const client = store.db.clients.find((c) => c.id === req.params.id);
+  if (!client) return res.status(404).send('Cliente no encontrado');
+  const month = /^\d{4}-\d{2}$/.test(String(req.query.month)) ? req.query.month : new Date().toISOString().slice(0, 7);
+  const data = {
+    posts: store.db.posts.filter((p) => p.clientId === client.id && p.status === 'publicado' && p.date.startsWith(month)),
+    campaigns: store.db.campaigns.filter((k) => k.clientId === client.id && k.status !== 'archived'),
+    payments: store.db.payments.filter((p) => p.clientId === client.id && (p.date || '').startsWith(month)),
+  };
+  res.type('html').send(report.render(client, data, store.db.settings, month));
 });
 
 /* ============================================================
